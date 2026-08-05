@@ -185,9 +185,9 @@ export class DataStore {
       invoice.status = 'paid';
     } else if (paid > 0) {
       invoice.status = 'partial';
-    } else if (due < today && invoice.status !== 'draft') {
+    } else if (due < today) {
       invoice.status = 'overdue';
-    } else if (invoice.status === 'overdue' || invoice.status === 'partial' || invoice.status === 'paid') {
+    } else {
       invoice.status = 'sent';
     }
     invoice.updatedAt = new Date().toISOString();
