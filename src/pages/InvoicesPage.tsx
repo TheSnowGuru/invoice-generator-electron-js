@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useAppStore } from '../store';
 import LineItemsEditor from '../components/LineItemsEditor';
+import ActionMenu from '../components/ActionMenu';
 import type { Invoice, InvoiceStatus, Payment } from '../types';
 import {
   addDaysIso,
@@ -11,6 +12,8 @@ import {
   paidAmount,
   todayIso,
 } from '../types';
+
+type InvoiceDocKind = 'invoice' | 'proforma' | 'receipt' | 'reminder';
 
 function blankInvoice(prefix: string, next: number, vat: number, notes: string): Invoice {
   const now = new Date().toISOString();
@@ -89,10 +92,16 @@ export default function InvoicesPage() {
     setEditing(null);
   };
 
-  const generatePdf = async (id: string) => {
+  const generateDoc = async (id: string, kind: InvoiceDocKind) => {
     try {
-      const path = await window.flowstate.generateInvoicePdf(id);
-      setToast(`PDF saved: ${path}`);
+      const path = await window.flowstate.generateInvoicePdf(id, kind);
+      const labels: Record<InvoiceDocKind, string> = {
+        invoice: 'Tax invoice',
+        proforma: 'Proforma invoice',
+        receipt: 'Receipt',
+        reminder: 'Payment reminder',
+      };
+      setToast(`${labels[kind]} saved`);
       await window.flowstate.openPdf(path);
     } catch (e) {
       setToast(e instanceof Error ? e.message : 'PDF failed');
@@ -124,7 +133,6 @@ export default function InvoicesPage() {
       notes: paymentForm.notes,
       createdAt: new Date().toISOString(),
     };
-    // Ensure invoice is not draft when receiving payment
     if (paying.status === 'draft') {
       await saveInvoice({ ...paying, status: 'sent', updatedAt: new Date().toISOString() });
     }
@@ -142,7 +150,7 @@ export default function InvoicesPage() {
               onChange={(e) => setFilter(e.target.value as typeof filter)}
               style={{
                 background: 'var(--bg)',
-                border: '1px solid var(--border-strong)',
+                border: '1.5px solid var(--input-border, var(--border-strong))',
                 borderRadius: 8,
                 padding: '6px 10px',
               }}
@@ -193,25 +201,55 @@ export default function InvoicesPage() {
                         <span className={`badge badge-${inv.status}`}>{inv.status}</span>
                       </td>
                       <td>
-                        <div className="stack-sm">
-                          <button className="btn btn-sm" onClick={() => setEditing(inv)}>
-                            Edit
-                          </button>
-                          <button className="btn btn-sm" onClick={() => generatePdf(inv.id)}>
-                            PDF
-                          </button>
-                          <button className="btn btn-sm" onClick={() => openPay(inv)}>
-                            Pay
-                          </button>
-                          <button
-                            className="btn btn-sm btn-danger"
-                            onClick={() => {
-                              if (confirm(`Delete ${inv.number}?`)) deleteInvoice(inv.id);
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </div>
+                        <ActionMenu
+                          items={[
+                            {
+                              id: 'edit',
+                              label: 'Edit invoice',
+                              onClick: () => setEditing(inv),
+                            },
+                            {
+                              id: 'tax',
+                              label: 'Generate tax invoice',
+                              hint: 'VAT tax invoice PDF',
+                              separatorBefore: true,
+                              onClick: () => generateDoc(inv.id, 'invoice'),
+                            },
+                            {
+                              id: 'proforma',
+                              label: 'Generate proforma',
+                              hint: 'Not a tax invoice',
+                              onClick: () => generateDoc(inv.id, 'proforma'),
+                            },
+                            {
+                              id: 'receipt',
+                              label: 'Generate receipt',
+                              hint: 'Payment acknowledgement',
+                              onClick: () => generateDoc(inv.id, 'receipt'),
+                            },
+                            {
+                              id: 'reminder',
+                              label: 'Generate payment reminder',
+                              hint: 'Outstanding balance notice',
+                              onClick: () => generateDoc(inv.id, 'reminder'),
+                            },
+                            {
+                              id: 'pay',
+                              label: 'Record payment',
+                              separatorBefore: true,
+                              onClick: () => openPay(inv),
+                            },
+                            {
+                              id: 'delete',
+                              label: 'Delete',
+                              danger: true,
+                              separatorBefore: true,
+                              onClick: () => {
+                                if (confirm(`Delete ${inv.number}?`)) deleteInvoice(inv.id);
+                              },
+                            },
+                          ]}
+                        />
                       </td>
                     </tr>
                   );

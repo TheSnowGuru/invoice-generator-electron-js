@@ -7,7 +7,8 @@ Offline-first Electron desktop app for UK freelancers and small businesses. Mana
 - **Company branding** — logo, accent colour, VAT/company numbers, UK bank details
 - **Appearance** — dark and light themes (Settings → Appearance)
 - **Invoices** — lifecycle draft → sent → partial → paid → overdue, with UK VAT defaults (20% / 5% / 0%), GBP, and `dd/MM/yyyy` dates
-- **Offers / quotations** — professional offer PDFs; convert accepted offers into draft invoices
+- **Document PDFs (Actions ▾)** — tax invoice, proforma invoice, receipt, and payment reminder from each invoice
+- **Offers / quotations** — premium **pricing offer** PDF plus classic quotation; convert accepted offers into draft invoices
 - **Payments** — record partial or full payments; invoice status updates automatically
 - **Clients** — contacts, billing addresses, and revenue totals
 - **Dashboard** — KPIs (invoiced, VAT collected/outstanding, amount due), monthly charts, status pie chart, client leaderboard

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useAppStore } from '../store';
 import LineItemsEditor from '../components/LineItemsEditor';
+import ActionMenu from '../components/ActionMenu';
 import type { Offer, OfferStatus } from '../types';
 import {
   addDaysIso,
@@ -66,10 +67,10 @@ export default function OffersPage() {
     setEditing(null);
   };
 
-  const generatePdf = async (id: string) => {
+  const generatePdf = async (id: string, style: 'pricing' | 'quotation' = 'pricing') => {
     try {
-      const path = await window.flowstate.generateOfferPdf(id);
-      setToast(`Offer PDF saved`);
+      const path = await window.flowstate.generateOfferPdf(id, style);
+      setToast(style === 'pricing' ? 'Pricing offer PDF saved' : 'Quotation PDF saved');
       await window.flowstate.openPdf(path);
     } catch (e) {
       setToast(e instanceof Error ? e.message : 'PDF failed');
@@ -110,7 +111,7 @@ export default function OffersPage() {
         </div>
 
         {sorted.length === 0 ? (
-          <div className="empty">No offers yet — create a polished quotation PDF</div>
+          <div className="empty">No offers yet — create a polished pricing offer PDF</div>
         ) : (
           <div className="table-wrap">
             <table className="data">
@@ -139,25 +140,44 @@ export default function OffersPage() {
                         <span className={`badge badge-${offer.status}`}>{offer.status}</span>
                       </td>
                       <td>
-                        <div className="stack-sm">
-                          <button className="btn btn-sm" onClick={() => setEditing(offer)}>
-                            Edit
-                          </button>
-                          <button className="btn btn-sm" onClick={() => generatePdf(offer.id)}>
-                            PDF
-                          </button>
-                          <button className="btn btn-sm" onClick={() => convertToInvoice(offer)}>
-                            → Invoice
-                          </button>
-                          <button
-                            className="btn btn-sm btn-danger"
-                            onClick={() => {
-                              if (confirm(`Delete ${offer.number}?`)) deleteOffer(offer.id);
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </div>
+                        <ActionMenu
+                          items={[
+                            {
+                              id: 'edit',
+                              label: 'Edit offer',
+                              onClick: () => setEditing(offer),
+                            },
+                            {
+                              id: 'pricing',
+                              label: 'Generate pricing offer',
+                              hint: 'Premium proposal PDF',
+                              separatorBefore: true,
+                              onClick: () => generatePdf(offer.id, 'pricing'),
+                            },
+                            {
+                              id: 'quotation',
+                              label: 'Generate quotation',
+                              hint: 'Classic quotation PDF',
+                              onClick: () => generatePdf(offer.id, 'quotation'),
+                            },
+                            {
+                              id: 'convert',
+                              label: 'Convert to invoice',
+                              hint: 'Create draft tax invoice',
+                              separatorBefore: true,
+                              onClick: () => convertToInvoice(offer),
+                            },
+                            {
+                              id: 'delete',
+                              label: 'Delete',
+                              danger: true,
+                              separatorBefore: true,
+                              onClick: () => {
+                                if (confirm(`Delete ${offer.number}?`)) deleteOffer(offer.id);
+                              },
+                            },
+                          ]}
+                        />
                       </td>
                     </tr>
                   );

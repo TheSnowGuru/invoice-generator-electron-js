@@ -342,7 +342,7 @@ a {
 }
 
 .table-wrap {
-  overflow: auto;
+  overflow: visible;
 }
 
 table.data {
