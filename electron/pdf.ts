@@ -298,9 +298,11 @@ function drawBankAndNotes(
   if (showBank) {
     const bankLines = [
       company.bankName && `Bank: ${company.bankName}`,
+      company.bankBranch && `Branch: ${company.bankBranch}`,
       company.bankAccountName && `Account: ${company.bankAccountName}`,
       company.bankSortCode && `Sort Code: ${company.bankSortCode}`,
       company.bankAccountNumber && `Account No: ${company.bankAccountNumber}`,
+      company.bankRouting && `Routing: ${company.bankRouting}`,
       company.bankIban && `IBAN: ${company.bankIban}`,
       company.bankBic && `BIC: ${company.bankBic}`,
     ].filter(Boolean) as string[];

@@ -288,6 +288,14 @@ export default function SettingsPage() {
               />
             </div>
             <div className="field">
+              <label>Branch</label>
+              <input
+                value={form.bankBranch}
+                onChange={(e) => set('bankBranch', e.target.value)}
+                placeholder="Branch name or number"
+              />
+            </div>
+            <div className="field">
               <label>Account name</label>
               <input
                 value={form.bankAccountName}
@@ -307,6 +315,14 @@ export default function SettingsPage() {
               <input
                 value={form.bankAccountNumber}
                 onChange={(e) => set('bankAccountNumber', e.target.value)}
+              />
+            </div>
+            <div className="field">
+              <label>Routing number</label>
+              <input
+                value={form.bankRouting}
+                onChange={(e) => set('bankRouting', e.target.value)}
+                placeholder="For international transfers"
               />
             </div>
             <div className="field">

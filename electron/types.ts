@@ -22,9 +22,11 @@ export interface CompanySettings {
   phone: string;
   website: string;
   bankName: string;
+  bankBranch: string;
   bankAccountName: string;
   bankSortCode: string;
   bankAccountNumber: string;
+  bankRouting: string;
   bankIban: string;
   bankBic: string;
   accentColor: string;
@@ -119,9 +121,11 @@ export const DEFAULT_COMPANY: CompanySettings = {
   phone: '',
   website: '',
   bankName: '',
+  bankBranch: '',
   bankAccountName: '',
   bankSortCode: '',
   bankAccountNumber: '',
+  bankRouting: '',
   bankIban: '',
   bankBic: '',
   accentColor: '#38bdf8',

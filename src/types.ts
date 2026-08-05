@@ -22,9 +22,11 @@ export interface CompanySettings {
   phone: string;
   website: string;
   bankName: string;
+  bankBranch: string;
   bankAccountName: string;
   bankSortCode: string;
   bankAccountNumber: string;
+  bankRouting: string;
   bankIban: string;
   bankBic: string;
   accentColor: string;
