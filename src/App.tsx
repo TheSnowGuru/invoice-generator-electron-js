@@ -1,12 +1,16 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import { useAppStore } from './store';
-import Dashboard from './pages/Dashboard';
-import InvoicesPage from './pages/InvoicesPage';
-import OffersPage from './pages/OffersPage';
-import ClientsPage from './pages/ClientsPage';
-import SettingsPage from './pages/SettingsPage';
-import ReportsPage from './pages/ReportsPage';
+
+// Route-level code splitting: each page (and its dependencies, e.g. the
+// charting library used by the dashboard) loads on demand instead of
+// being bundled into the initial startup payload.
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const InvoicesPage = lazy(() => import('./pages/InvoicesPage'));
+const OffersPage = lazy(() => import('./pages/OffersPage'));
+const ClientsPage = lazy(() => import('./pages/ClientsPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const ReportsPage = lazy(() => import('./pages/ReportsPage'));
 
 const titles: Record<string, { title: string; subtitle: string }> = {
   '/': {
@@ -116,14 +120,16 @@ export default function App() {
           </div>
         </header>
         <main className="content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/invoices" element={<InvoicesPage />} />
-            <Route path="/offers" element={<OffersPage />} />
-            <Route path="/clients" element={<ClientsPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-          </Routes>
+          <Suspense fallback={<div className="empty">Loading…</div>}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/invoices" element={<InvoicesPage />} />
+              <Route path="/offers" element={<OffersPage />} />
+              <Route path="/clients" element={<ClientsPage />} />
+              <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Routes>
+          </Suspense>
         </main>
       </div>
 

@@ -16,7 +16,7 @@ import {
   resolveVatRate,
   todayIso,
 } from '../types';
-import { newOfferDraft } from '../lib/documents';
+import { duplicateOffer, newOfferDraft } from '../lib/documents';
 
 export default function OffersPage() {
   const offers = useAppStore((s) => s.offers);
@@ -145,6 +145,17 @@ export default function OffersPage() {
                               id: 'edit',
                               label: 'Edit offer',
                               onClick: () => setEditing(offer),
+                            },
+                            {
+                              id: 'duplicate',
+                              label: 'Duplicate',
+                              hint: 'Copy as a new draft',
+                              onClick: () =>
+                                setStudio({
+                                  kind: 'offer',
+                                  offer: duplicateOffer(offer, company),
+                                  style: 'pricing',
+                                }),
                             },
                             {
                               id: 'pricing',

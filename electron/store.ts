@@ -16,6 +16,7 @@ const LEGACY_FILE = 'flowstate-data.json';
 export class DataStore {
   private filePath: string;
   private data: AppData;
+  private writeTimer: NodeJS.Timeout | null = null;
 
   constructor(dataDir: string) {
     this.filePath = path.join(dataDir, FILE);
@@ -59,12 +60,29 @@ export class DataStore {
     }
   }
 
+  /** Atomic write: temp file + rename, so a crash mid-write never corrupts data. */
   private write(data: AppData = this.data) {
-    fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf-8');
+    const tmpPath = `${this.filePath}.tmp`;
+    fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
+    fs.renameSync(tmpPath, this.filePath);
   }
 
+  /** Debounced persist: coalesces bursts of mutations into a single disk write. */
   private persist() {
-    this.write(this.data);
+    if (this.writeTimer) clearTimeout(this.writeTimer);
+    this.writeTimer = setTimeout(() => {
+      this.writeTimer = null;
+      this.write();
+    }, 200);
+  }
+
+  /** Write any pending changes immediately. Call before the app quits. */
+  flush() {
+    if (this.writeTimer) {
+      clearTimeout(this.writeTimer);
+      this.writeTimer = null;
+      this.write();
+    }
   }
 
   getAll(): AppData {

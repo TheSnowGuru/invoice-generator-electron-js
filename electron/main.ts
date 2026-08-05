@@ -304,3 +304,8 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
+
+// Ensure any debounced writes hit disk before the process exits.
+app.on('before-quit', () => {
+  store?.flush();
+});

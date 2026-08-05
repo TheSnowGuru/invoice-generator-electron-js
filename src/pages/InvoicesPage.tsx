@@ -16,7 +16,7 @@ import {
   resolveVatRate,
   todayIso,
 } from '../types';
-import { newInvoiceDraft } from '../lib/documents';
+import { duplicateInvoice, newInvoiceDraft } from '../lib/documents';
 
 export default function InvoicesPage() {
   const invoices = useAppStore((s) => s.invoices);
@@ -189,6 +189,17 @@ export default function InvoicesPage() {
                               id: 'edit',
                               label: 'Edit invoice',
                               onClick: () => setEditing(inv),
+                            },
+                            {
+                              id: 'duplicate',
+                              label: 'Duplicate',
+                              hint: 'Copy as a new draft',
+                              onClick: () =>
+                                setStudio({
+                                  kind: 'invoice',
+                                  invoice: duplicateInvoice(inv, company),
+                                  docKind: 'invoice',
+                                }),
                             },
                             {
                               id: 'tax',

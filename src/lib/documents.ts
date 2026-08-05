@@ -28,6 +28,38 @@ export function newInvoiceDraft(company: CompanySettings, client?: Client): Invo
   };
 }
 
+/** Copy of an existing invoice as a fresh draft: new id, next number, today's dates. */
+export function duplicateInvoice(source: Invoice, company: CompanySettings): Invoice {
+  const now = new Date().toISOString();
+  return {
+    ...source,
+    id: newId(),
+    number: `${company.invoicePrefix}${company.nextInvoiceNumber}`,
+    status: 'draft',
+    issueDate: todayIso(),
+    dueDate: addDaysIso(30),
+    items: source.items.map((item) => ({ ...item, id: newId() })),
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+/** Copy of an existing offer as a fresh draft: new id, next number, today's dates. */
+export function duplicateOffer(source: Offer, company: CompanySettings): Offer {
+  const now = new Date().toISOString();
+  return {
+    ...source,
+    id: newId(),
+    number: `${company.offerPrefix}${company.nextOfferNumber}`,
+    status: 'draft',
+    issueDate: todayIso(),
+    validUntil: addDaysIso(14),
+    items: source.items.map((item) => ({ ...item, id: newId() })),
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
 /** Fresh offer draft; VAT respects the client's country when provided. */
 export function newOfferDraft(company: CompanySettings, client?: Client): Offer {
   const now = new Date().toISOString();

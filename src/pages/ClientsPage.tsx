@@ -45,6 +45,22 @@ export default function ClientsPage() {
     [clients, viewingId]
   );
 
+  // Single pass over invoices/payments instead of re-filtering per client row.
+  const totalsByClient = useMemo(() => {
+    const paidByInvoice = new Map<string, number>();
+    for (const p of payments) {
+      paidByInvoice.set(p.invoiceId, (paidByInvoice.get(p.invoiceId) ?? 0) + p.amount);
+    }
+    const map = new Map<string, { invoiced: number; paid: number }>();
+    for (const inv of invoices) {
+      const entry = map.get(inv.clientId) ?? { invoiced: 0, paid: 0 };
+      entry.invoiced += calcTotals(inv.items).total;
+      entry.paid += paidByInvoice.get(inv.id) ?? 0;
+      map.set(inv.clientId, entry);
+    }
+    return map;
+  }, [invoices, payments]);
+
   const startInvoice = (client: Client) => {
     setStudio({ kind: 'invoice', invoice: newInvoiceDraft(company, client), docKind: 'invoice' });
   };
@@ -98,9 +114,7 @@ export default function ClientsPage() {
               </thead>
               <tbody>
                 {clients.map((c) => {
-                  const clientInvs = invoices.filter((i) => i.clientId === c.id);
-                  const invoiced = clientInvs.reduce((s, i) => s + calcTotals(i.items).total, 0);
-                  const paid = clientInvs.reduce((s, i) => s + paidAmount(i.id, payments), 0);
+                  const { invoiced, paid } = totalsByClient.get(c.id) ?? { invoiced: 0, paid: 0 };
                   return (
                     <tr key={c.id}>
                       <td>
