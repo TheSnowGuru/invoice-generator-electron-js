@@ -1290,6 +1290,49 @@ table.data tr:hover td {
   color: var(--text-dim);
 }
 
+/* Settings tabs */
+.settings-page {
+  max-width: 860px;
+}
+
+.settings-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-soft);
+  width: fit-content;
+}
+
+.settings-tab {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.settings-tab:hover {
+  color: var(--text);
+}
+
+.settings-tab.active {
+  background: var(--bg-elevated);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.18);
+}
+
+.settings-page .panel + .panel {
+  margin-top: 16px;
+}
+
 /* Clickable client name in tables */
 .link-btn {
   background: none;
