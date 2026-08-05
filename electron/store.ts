@@ -10,7 +10,8 @@ import {
   Payment,
 } from './types';
 
-const FILE = 'flowstate-data.json';
+const FILE = 'myfinance-data.json';
+const LEGACY_FILE = 'flowstate-data.json';
 
 export class DataStore {
   private filePath: string;
@@ -22,6 +23,10 @@ export class DataStore {
   }
 
   private load(): AppData {
+    const legacyPath = path.join(path.dirname(this.filePath), LEGACY_FILE);
+    if (!fs.existsSync(this.filePath) && fs.existsSync(legacyPath)) {
+      fs.copyFileSync(legacyPath, this.filePath);
+    }
     if (!fs.existsSync(this.filePath)) {
       const initial: AppData = {
         company: { ...DEFAULT_COMPANY },

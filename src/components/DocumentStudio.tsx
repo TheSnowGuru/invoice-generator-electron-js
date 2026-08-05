@@ -42,6 +42,7 @@ export default function DocumentStudio({ session, onClose }: Props) {
   const logoUrl = useLogoUrl(company.logoPath);
 
   const [busy, setBusy] = useState(false);
+  const [savedPath, setSavedPath] = useState<string | null>(null);
   const [invoiceDraft, setInvoiceDraft] = useState<Invoice | null>(
     session.kind === 'invoice' ? { ...session.invoice, items: session.invoice.items.map((i) => ({ ...i })) } : null
   );
@@ -109,9 +110,8 @@ export default function DocumentStudio({ session, onClose }: Props) {
         };
         await saveInvoice(saved);
         const path = await window.flowstate.generateInvoicePdf(saved.id, docKind);
+        setSavedPath(path);
         setToast(`${INVOICE_KIND_LABELS[docKind]} saved`);
-        await window.flowstate.openPdf(path);
-        onClose();
       } else if (session.kind === 'offer' && offerDraft) {
         const saved = {
           ...offerDraft,
@@ -119,14 +119,51 @@ export default function DocumentStudio({ session, onClose }: Props) {
         };
         await saveOffer(saved);
         const path = await window.flowstate.generateOfferPdf(saved.id, offerStyle);
+        setSavedPath(path);
         setToast(offerStyle === 'pricing' ? 'Pricing offer PDF saved' : 'Quotation PDF saved');
-        await window.flowstate.openPdf(path);
-        onClose();
       }
     } catch (e) {
       setToast(e instanceof Error ? e.message : 'PDF failed');
     } finally {
       setBusy(false);
+    }
+  };
+
+  const shareApple = async () => {
+    if (!savedPath) return;
+    try {
+      const file = await window.flowstate.readFileForShare(savedPath);
+      const blob = new Blob([file.data], { type: file.mime });
+      const shareFile = new File([blob], file.name, { type: file.mime });
+      if (navigator.canShare?.({ files: [shareFile] })) {
+        await navigator.share({
+          files: [shareFile],
+          title: file.name,
+          text: `Sharing ${file.name}`,
+        });
+        setToast('Shared');
+        return;
+      }
+      const ok = await window.flowstate.shareMac(savedPath);
+      setToast(ok ? 'Share sheet opened' : 'Shown in Finder — use Share from there');
+    } catch (e) {
+      if (e instanceof Error && e.name === 'AbortError') return;
+      try {
+        await window.flowstate.shareMac(savedPath);
+        setToast('Share sheet opened');
+      } catch (err) {
+        setToast(err instanceof Error ? err.message : 'Share failed');
+      }
+    }
+  };
+
+  const shareWhatsApp = async () => {
+    if (!savedPath) return;
+    try {
+      await window.flowstate.shareWhatsApp(savedPath);
+      setToast('Opened in WhatsApp');
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : 'WhatsApp share failed');
     }
   };
 
@@ -142,13 +179,54 @@ export default function DocumentStudio({ session, onClose }: Props) {
           </div>
           <div className="stack-sm">
             <button className="btn btn-ghost" onClick={onClose} disabled={busy}>
-              Cancel
+              {savedPath ? 'Done' : 'Cancel'}
             </button>
-            <button className="btn btn-primary" onClick={generate} disabled={busy || !client}>
-              {busy ? 'Generating…' : 'Generate PDF'}
-            </button>
+            {!savedPath && (
+              <button className="btn btn-primary" onClick={generate} disabled={busy || !client}>
+                {busy ? 'Generating…' : 'Generate PDF'}
+              </button>
+            )}
           </div>
         </div>
+
+        {savedPath && (
+          <div className="share-bar">
+            <div className="share-bar-text">
+              <strong>PDF saved</strong>
+              <span className="share-path" title={savedPath}>
+                {savedPath}
+              </span>
+            </div>
+            <div className="stack-sm">
+              <button className="btn btn-primary btn-sm" onClick={shareApple}>
+                Share…
+              </button>
+              <button className="btn btn-sm" onClick={shareWhatsApp}>
+                WhatsApp
+              </button>
+              <button
+                className="btn btn-sm"
+                onClick={() => window.flowstate.openPdf(savedPath)}
+              >
+                Open
+              </button>
+              <button
+                className="btn btn-sm"
+                onClick={() => window.flowstate.revealPdf(savedPath)}
+              >
+                Show in Finder
+              </button>
+              <button
+                className="btn btn-sm btn-ghost"
+                onClick={() => {
+                  setSavedPath(null);
+                }}
+              >
+                Edit again
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="studio-body">
           <aside className="studio-form">

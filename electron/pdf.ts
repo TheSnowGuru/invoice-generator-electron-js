@@ -209,7 +209,7 @@ function drawItemsTable(
       width: usable * 0.12,
       align: 'right',
     });
-    doc.text(`${Math.round(item.vatRate * 100)}%`, cols.vat, y + 8, {
+    doc.text(`${Number((item.vatRate * 100).toFixed(2))}%`, cols.vat, y + 8, {
       width: usable * 0.12,
       align: 'right',
     });
@@ -335,7 +335,7 @@ function createDoc(outPath: string): PDFKit.PDFDocument {
   const doc = new PDFDocument({
     size: 'A4',
     margins: { top: 40, bottom: 40, left: 50, right: 50 },
-    info: { Producer: 'FlowState Finance', Creator: 'FlowState Finance' },
+    info: { Producer: 'MyFinance', Creator: 'MyFinance' },
   });
   doc.pipe(fs.createWriteStream(outPath));
   return doc;
@@ -667,7 +667,7 @@ export function generatePricingOfferPdf({
           .font('Helvetica')
           .fontSize(9)
           .text(
-            `${item.quantity} × ${formatGbp(item.unitPrice)}  ·  VAT ${Math.round(item.vatRate * 100)}%`,
+            `${item.quantity} × ${formatGbp(item.unitPrice)}  ·  VAT ${Number((item.vatRate * 100).toFixed(2))}%`,
             margin + 44,
             y + 32
           );

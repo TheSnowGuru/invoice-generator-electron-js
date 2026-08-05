@@ -68,14 +68,18 @@ export default function LineItemsEditor({ items, defaultVatRate, onChange, vatHi
             </div>
             <div className="field">
               <label>VAT %</label>
-              <select
-                value={item.vatRate}
-                onChange={(e) => update(item.id, { vatRate: Number(e.target.value) })}
-              >
-                <option value={0.2}>20%</option>
-                <option value={0.05}>5%</option>
-                <option value={0}>0%</option>
-              </select>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={Number((item.vatRate * 100).toFixed(2))}
+                onChange={(e) => {
+                  const pct = Number(e.target.value);
+                  const safe = Number.isFinite(pct) ? Math.min(100, Math.max(0, pct)) : 0;
+                  update(item.id, { vatRate: safe / 100 });
+                }}
+              />
             </div>
             <button type="button" className="btn btn-ghost btn-sm" onClick={() => remove(item.id)}>
               Remove

@@ -43,7 +43,7 @@ function ItemsTable({ items, accent }: { items: LineItem[]; accent: string }) {
               <td>{item.description || '—'}</td>
               <td>{item.quantity}</td>
               <td>{formatGbp(item.unitPrice)}</td>
-              <td>{Math.round(item.vatRate * 100)}%</td>
+              <td>{Number((item.vatRate * 100).toFixed(2))}%</td>
               <td>{formatGbp(gross)}</td>
             </tr>
           );
@@ -362,7 +362,7 @@ export function OfferDocumentPreview({
                   <div className="dp-strong">{item.description || 'Item'}</div>
                   <div className="dp-muted">
                     {item.quantity} × {formatGbp(item.unitPrice)} · VAT{' '}
-                    {Math.round(item.vatRate * 100)}%
+                    {Number((item.vatRate * 100).toFixed(2))}%
                   </div>
                 </div>
                 <div className="dp-package-price">{formatGbp(gross)}</div>

@@ -32,7 +32,14 @@ declare global {
       revealPdf: (filePath: string) => Promise<void>;
       exportCsv: (kind: 'invoices' | 'payments' | 'clients') => Promise<string | null>;
       pickLogo: () => Promise<string | null>;
+      pickInvoicesFolder: () => Promise<string | null>;
+      getInvoicesRoot: () => Promise<string>;
       readDataUrl: (filePath: string) => Promise<string | null>;
+      readFileForShare: (
+        filePath: string
+      ) => Promise<{ name: string; mime: string; data: Uint8Array }>;
+      shareMac: (filePath: string) => Promise<boolean>;
+      shareWhatsApp: (filePath: string) => Promise<boolean>;
     };
   }
 }

@@ -10,10 +10,15 @@ export default function SettingsPage() {
 
   const [form, setForm] = useState<CompanySettings>(company);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [defaultInvoicesRoot, setDefaultInvoicesRoot] = useState('');
 
   useEffect(() => {
     setForm(company);
   }, [company]);
+
+  useEffect(() => {
+    window.flowstate.getInvoicesRoot().then(setDefaultInvoicesRoot).catch(() => {});
+  }, [company.pdfOutputDir]);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,6 +47,11 @@ export default function SettingsPage() {
   const pickLogo = async () => {
     const path = await window.flowstate.pickLogo();
     if (path) set('logoPath', path);
+  };
+
+  const pickInvoicesFolder = async () => {
+    const path = await window.flowstate.pickInvoicesFolder();
+    if (path) set('pdfOutputDir', path);
   };
 
   const save = async () => {
@@ -206,15 +216,19 @@ export default function SettingsPage() {
               />
             </div>
             <div className="field">
-              <label>Default VAT rate</label>
-              <select
-                value={form.defaultVatRate}
-                onChange={(e) => set('defaultVatRate', Number(e.target.value))}
-              >
-                <option value={0.2}>20% (standard)</option>
-                <option value={0.05}>5% (reduced)</option>
-                <option value={0}>0% (zero-rated)</option>
-              </select>
+              <label>Default VAT rate (%)</label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={Number((form.defaultVatRate * 100).toFixed(2))}
+                onChange={(e) => {
+                  const pct = Number(e.target.value);
+                  const safe = Number.isFinite(pct) ? Math.min(100, Math.max(0, pct)) : 20;
+                  set('defaultVatRate', safe / 100);
+                }}
+              />
             </div>
             <div className="field full">
               <label>Default invoice notes</label>
@@ -222,6 +236,40 @@ export default function SettingsPage() {
                 value={form.defaultNotes}
                 onChange={(e) => set('defaultNotes', e.target.value)}
               />
+            </div>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panel-header">
+            <h3>Storage</h3>
+          </div>
+          <div className="field">
+            <label>Invoices folder</label>
+            <p className="subtitle" style={{ margin: '0 0 8px' }}>
+              PDFs are saved as{' '}
+              <code style={{ fontSize: 12 }}>
+                folder / Client Name / INV-1001.pdf
+              </code>
+            </p>
+            <div className="stack-sm" style={{ alignItems: 'center' }}>
+              <input
+                readOnly
+                value={form.pdfOutputDir || defaultInvoicesRoot || 'Default (Documents/MyFinance/invoices)'}
+                style={{ flex: 1, minWidth: 0 }}
+              />
+              <button type="button" className="btn btn-sm" onClick={pickInvoicesFolder}>
+                Choose folder…
+              </button>
+              {form.pdfOutputDir && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-ghost"
+                  onClick={() => set('pdfOutputDir', '')}
+                >
+                  Use default
+                </button>
+              )}
             </div>
           </div>
         </div>

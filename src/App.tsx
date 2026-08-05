@@ -65,9 +65,9 @@ export default function App() {
       <div className="content" style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
         <div>
           <div className="brand-mark" style={{ margin: '0 auto 12px' }}>
-            FS
+            MF
           </div>
-          <p style={{ color: 'var(--text-muted)' }}>Loading FlowState Finance…</p>
+          <p style={{ color: 'var(--text-muted)' }}>Loading MyFinance…</p>
         </div>
       </div>
     );
@@ -77,8 +77,8 @@ export default function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">FS</div>
-          <h1>FlowState Finance</h1>
+          <div className="brand-mark">MF</div>
+          <h1>MyFinance</h1>
           <p>{company.name || 'Offline · UK'}</p>
         </div>
         <nav className="nav">
@@ -104,7 +104,7 @@ export default function App() {
         <div className="sidebar-footer">
           Data stored locally as JSON
           <br />
-          PDFs → Documents/FlowState Finance
+          PDFs → Documents/MyFinance
         </div>
       </aside>
 

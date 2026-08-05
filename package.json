@@ -1,9 +1,9 @@
 {
-  "name": "flowstate-finance",
+  "name": "myfinance",
   "version": "1.0.0",
-  "description": "FlowState Finance — UK invoice & offer generator for freelancers and SMEs",
+  "description": "MyFinance — UK invoice & offer generator for freelancers and SMEs",
   "main": "dist-electron/main.js",
-  "author": "FlowState",
+  "author": "MyFinance",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
@@ -33,8 +33,8 @@
     "vite-plugin-electron-renderer": "^0.14.6"
   },
   "build": {
-    "appId": "com.flowstate.finance",
-    "productName": "FlowState Finance",
+    "appId": "com.myfinance.app",
+    "productName": "MyFinance",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -52,7 +52,7 @@
       "gatekeeperAssess": false
     },
     "dmg": {
-      "title": "FlowState Finance",
+      "title": "MyFinance",
       "contents": [
         { "x": 130, "y": 220 },
         { "x": 410, "y": 220, "type": "link", "path": "/Applications" }

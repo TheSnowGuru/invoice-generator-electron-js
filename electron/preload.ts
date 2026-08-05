@@ -28,10 +28,8 @@ const api = {
     invoiceId: string,
     kind?: 'invoice' | 'proforma' | 'receipt' | 'reminder'
   ): Promise<string> => ipcRenderer.invoke('pdf:invoice', invoiceId, kind ?? 'invoice'),
-  generateOfferPdf: (
-    offerId: string,
-    style?: 'pricing' | 'quotation'
-  ): Promise<string> => ipcRenderer.invoke('pdf:offer', offerId, style ?? 'pricing'),
+  generateOfferPdf: (offerId: string, style?: 'pricing' | 'quotation'): Promise<string> =>
+    ipcRenderer.invoke('pdf:offer', offerId, style ?? 'pricing'),
   openPdf: (filePath: string): Promise<void> => ipcRenderer.invoke('pdf:open', filePath),
   revealPdf: (filePath: string): Promise<void> => ipcRenderer.invoke('pdf:reveal', filePath),
 
@@ -39,10 +37,21 @@ const api = {
     ipcRenderer.invoke('csv:export', kind),
 
   pickLogo: (): Promise<string | null> => ipcRenderer.invoke('dialog:pickLogo'),
+  pickInvoicesFolder: (): Promise<string | null> =>
+    ipcRenderer.invoke('dialog:pickInvoicesFolder'),
+  getInvoicesRoot: (): Promise<string> => ipcRenderer.invoke('paths:invoicesRoot'),
   readDataUrl: (filePath: string): Promise<string | null> =>
     ipcRenderer.invoke('fs:readDataUrl', filePath),
+
+  readFileForShare: (
+    filePath: string
+  ): Promise<{ name: string; mime: string; data: Uint8Array }> =>
+    ipcRenderer.invoke('share:readFile', filePath),
+  shareMac: (filePath: string): Promise<boolean> => ipcRenderer.invoke('share:mac', filePath),
+  shareWhatsApp: (filePath: string): Promise<boolean> =>
+    ipcRenderer.invoke('share:whatsapp', filePath),
 };
 
 contextBridge.exposeInMainWorld('flowstate', api);
 
-export type FlowStateApi = typeof api;
+export type MyFinanceApi = typeof api;

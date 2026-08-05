@@ -63,15 +63,15 @@ export default function ReportsPage() {
         <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--text-muted)', lineHeight: 1.7 }}>
           <li>
             <strong style={{ color: 'var(--text)' }}>JSON database:</strong> app userData folder
-            (<code>flowstate-data.json</code>)
+            (<code>myfinance-data.json</code>)
           </li>
           <li>
-            <strong style={{ color: 'var(--text)' }}>Invoice PDFs:</strong>{' '}
-            ~/Documents/FlowState Finance/invoices/
+            <strong style={{ color: 'var(--text)' }}>Invoice PDFs:</strong> configured invoices
+            folder (Settings), then <code>Client Name / INV-….pdf</code>
           </li>
           <li>
-            <strong style={{ color: 'var(--text)' }}>Offer PDFs:</strong>{' '}
-            ~/Documents/FlowState Finance/offers/
+            <strong style={{ color: 'var(--text)' }}>Offer PDFs:</strong> sibling{' '}
+            <code>offers / Client Name /</code> folder next to invoices
           </li>
           <li>
             <strong style={{ color: 'var(--text)' }}>CSV exports:</strong> you choose the save
