@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { DataStore } from './store';
-import { generateInvoicePdf, generateOfferPdf } from './pdf';
+import { generateInvoicePdf, generateOfferPdf, type InvoiceDocKind } from './pdf';
 import { exportInvoicesCsv, exportPaymentsCsv, exportClientsCsv } from './csv';
 import type { CompanySettings, Client, Invoice, Offer, Payment } from './types';
 
@@ -92,27 +92,44 @@ function registerIpc() {
   ipcMain.handle('payments:delete', (_e, id: string) => store.deletePayment(id));
 
   // ---- PDF ----
-  ipcMain.handle('pdf:invoice', async (_e, invoiceId: string) => {
-    const invoice = store.listInvoices().find((i) => i.id === invoiceId);
-    if (!invoice) throw new Error('Invoice not found');
-    const client = store.listClients().find((c) => c.id === invoice.clientId);
-    if (!client) throw new Error('Client not found');
-    const company = store.getCompany();
-    const outPath = path.join(getPdfDir(), `${invoice.number}.pdf`);
-    await generateInvoicePdf({ invoice, client, company, outPath });
-    return outPath;
-  });
+  ipcMain.handle(
+    'pdf:invoice',
+    async (_e, invoiceId: string, kind: InvoiceDocKind = 'invoice') => {
+      const invoice = store.listInvoices().find((i) => i.id === invoiceId);
+      if (!invoice) throw new Error('Invoice not found');
+      const client = store.listClients().find((c) => c.id === invoice.clientId);
+      if (!client) throw new Error('Client not found');
+      const company = store.getCompany();
+      const suffix = kind === 'invoice' ? '' : `-${kind}`;
+      const safeNumber = invoice.number.replace(/[^\w.-]+/g, '_');
+      const outPath = path.join(getPdfDir(), `${safeNumber}${suffix}.pdf`);
+      await generateInvoicePdf({
+        invoice,
+        client,
+        company,
+        outPath,
+        kind,
+        payments: store.listPayments(),
+      });
+      return outPath;
+    }
+  );
 
-  ipcMain.handle('pdf:offer', async (_e, offerId: string) => {
-    const offer = store.listOffers().find((o) => o.id === offerId);
-    if (!offer) throw new Error('Offer not found');
-    const client = store.listClients().find((c) => c.id === offer.clientId);
-    if (!client) throw new Error('Client not found');
-    const company = store.getCompany();
-    const outPath = path.join(getOffersPdfDir(), `${offer.number}.pdf`);
-    await generateOfferPdf({ offer, client, company, outPath });
-    return outPath;
-  });
+  ipcMain.handle(
+    'pdf:offer',
+    async (_e, offerId: string, style: 'pricing' | 'quotation' = 'pricing') => {
+      const offer = store.listOffers().find((o) => o.id === offerId);
+      if (!offer) throw new Error('Offer not found');
+      const client = store.listClients().find((c) => c.id === offer.clientId);
+      if (!client) throw new Error('Client not found');
+      const company = store.getCompany();
+      const safeNumber = offer.number.replace(/[^\w.-]+/g, '_');
+      const suffix = style === 'pricing' ? '-pricing' : '-quotation';
+      const outPath = path.join(getOffersPdfDir(), `${safeNumber}${suffix}.pdf`);
+      await generateOfferPdf({ offer, client, company, outPath, style });
+      return outPath;
+    }
+  );
 
   ipcMain.handle('pdf:open', async (_e, filePath: string) => {
     await shell.openPath(filePath);

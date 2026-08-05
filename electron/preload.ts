@@ -24,9 +24,14 @@ const api = {
   savePayment: (payment: Payment): Promise<Payment> => ipcRenderer.invoke('payments:save', payment),
   deletePayment: (id: string): Promise<void> => ipcRenderer.invoke('payments:delete', id),
 
-  generateInvoicePdf: (invoiceId: string): Promise<string> =>
-    ipcRenderer.invoke('pdf:invoice', invoiceId),
-  generateOfferPdf: (offerId: string): Promise<string> => ipcRenderer.invoke('pdf:offer', offerId),
+  generateInvoicePdf: (
+    invoiceId: string,
+    kind?: 'invoice' | 'proforma' | 'receipt' | 'reminder'
+  ): Promise<string> => ipcRenderer.invoke('pdf:invoice', invoiceId, kind ?? 'invoice'),
+  generateOfferPdf: (
+    offerId: string,
+    style?: 'pricing' | 'quotation'
+  ): Promise<string> => ipcRenderer.invoke('pdf:offer', offerId, style ?? 'pricing'),
   openPdf: (filePath: string): Promise<void> => ipcRenderer.invoke('pdf:open', filePath),
   revealPdf: (filePath: string): Promise<void> => ipcRenderer.invoke('pdf:reveal', filePath),
 

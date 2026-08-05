@@ -20,8 +20,14 @@ declare global {
       listPayments: () => Promise<import('./types').Payment[]>;
       savePayment: (payment: import('./types').Payment) => Promise<import('./types').Payment>;
       deletePayment: (id: string) => Promise<void>;
-      generateInvoicePdf: (invoiceId: string) => Promise<string>;
-      generateOfferPdf: (offerId: string) => Promise<string>;
+      generateInvoicePdf: (
+        invoiceId: string,
+        kind?: 'invoice' | 'proforma' | 'receipt' | 'reminder'
+      ) => Promise<string>;
+      generateOfferPdf: (
+        offerId: string,
+        style?: 'pricing' | 'quotation'
+      ) => Promise<string>;
       openPdf: (filePath: string) => Promise<void>;
       revealPdf: (filePath: string) => Promise<void>;
       exportCsv: (kind: 'invoices' | 'payments' | 'clients') => Promise<string | null>;
