@@ -36,17 +36,35 @@
     "appId": "com.flowstate.finance",
     "productName": "FlowState Finance",
     "directories": {
-      "output": "release"
+      "output": "release",
+      "buildResources": "build"
     },
     "mac": {
       "category": "public.app-category.finance",
-      "target": ["dmg", "zip"]
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64", "x64"]
+        }
+      ],
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "FlowState Finance",
+      "contents": [
+        { "x": 130, "y": 220 },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+      ]
     },
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
       "package.json"
     ],
-    "extraResources": []
+    "asarUnpack": [
+      "**/node_modules/pdfkit/**/*"
+    ]
   }
 }
