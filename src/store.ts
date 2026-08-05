@@ -31,6 +31,7 @@ const empty: AppData = {
     email: '',
     phone: '',
     website: '',
+    bankName: '',
     bankAccountName: '',
     bankSortCode: '',
     bankAccountNumber: '',

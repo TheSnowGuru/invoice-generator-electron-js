@@ -280,6 +280,14 @@ export default function SettingsPage() {
           </div>
           <div className="form-grid">
             <div className="field">
+              <label>Bank name</label>
+              <input
+                value={form.bankName}
+                onChange={(e) => set('bankName', e.target.value)}
+                placeholder="e.g. Barclays"
+              />
+            </div>
+            <div className="field">
               <label>Account name</label>
               <input
                 value={form.bankAccountName}

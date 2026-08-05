@@ -21,6 +21,7 @@ export interface CompanySettings {
   email: string;
   phone: string;
   website: string;
+  bankName: string;
   bankAccountName: string;
   bankSortCode: string;
   bankAccountNumber: string;
@@ -117,6 +118,7 @@ export const DEFAULT_COMPANY: CompanySettings = {
   email: 'hello@example.com',
   phone: '',
   website: '',
+  bankName: '',
   bankAccountName: '',
   bankSortCode: '',
   bankAccountNumber: '',

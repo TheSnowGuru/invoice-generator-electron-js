@@ -89,6 +89,7 @@ function TotalsBlock({
 
 function BankBlock({ company, accent }: { company: CompanySettings; accent: string }) {
   const lines = [
+    company.bankName && `Bank: ${company.bankName}`,
     company.bankAccountName && `Account: ${company.bankAccountName}`,
     company.bankSortCode && `Sort Code: ${company.bankSortCode}`,
     company.bankAccountNumber && `Account No: ${company.bankAccountNumber}`,
