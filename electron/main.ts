@@ -170,11 +170,12 @@ function registerIpc() {
     };
   });
 
-  ipcMain.handle('share:whatsapp', async (_e, filePath: string) => {
+  ipcMain.handle('share:whatsapp', async (_e, filePath: string, message?: string) => {
     if (!filePath || !fs.existsSync(filePath)) throw new Error('File not found');
     if (process.platform !== 'darwin') {
       throw new Error('WhatsApp share is available on macOS');
     }
+    // Put the PDF on the clipboard so the user can paste it after the text.
     try {
       await execFileAsync('osascript', [
         '-e',
@@ -182,6 +183,15 @@ function registerIpc() {
       ]);
     } catch {
       // clipboard is optional
+    }
+    if (message) {
+      // Open WhatsApp with the message prefilled; the PDF is on the clipboard.
+      try {
+        await execFileAsync('open', [`whatsapp://send?text=${encodeURIComponent(message)}`]);
+        return true;
+      } catch {
+        // fall through to plain file share
+      }
     }
     try {
       await execFileAsync('open', ['-a', 'WhatsApp', filePath]);
@@ -194,15 +204,54 @@ function registerIpc() {
     return true;
   });
 
-  ipcMain.handle('share:mac', async (_e, filePath: string) => {
+  ipcMain.handle(
+    'share:email',
+    async (_e, filePath: string, subject: string, body: string) => {
+      if (!filePath || !fs.existsSync(filePath)) throw new Error('File not found');
+      if (process.platform === 'darwin') {
+        // Compose in Apple Mail with subject, body, and the PDF attached.
+        const script = [
+          'on run argv',
+          '  set theSubject to item 1 of argv',
+          '  set theBody to item 2 of argv',
+          '  set theFile to POSIX file (item 3 of argv)',
+          '  tell application "Mail"',
+          '    set msg to make new outgoing message with properties {subject:theSubject, content:theBody & linefeed & linefeed, visible:true}',
+          '    tell msg to make new attachment with properties {file name:theFile} at after the last paragraph',
+          '    activate',
+          '  end tell',
+          'end run',
+        ].join('\n');
+        try {
+          await execFileAsync('osascript', ['-e', script, subject, body, filePath], {
+            timeout: 30000,
+          });
+          return true;
+        } catch {
+          // fall through to mailto
+        }
+      }
+      // Fallback: default mail client with prefilled text; reveal the PDF to attach manually.
+      await shell.openExternal(
+        `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+      );
+      shell.showItemInFolder(filePath);
+      return false;
+    }
+  );
+
+  ipcMain.handle('share:mac', async (_e, filePath: string, message?: string) => {
     if (!filePath || !fs.existsSync(filePath)) throw new Error('File not found');
     if (process.platform !== 'darwin') throw new Error('System share is available on macOS');
 
-    const escaped = filePath.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    const escapeJs = (s: string) =>
+      s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '');
+    const escaped = escapeJs(filePath);
+    const messageItem = message ? `"${escapeJs(message)}", ` : '';
     const script = `
       ObjC.import('AppKit');
       const url = $.NSURL.fileURLWithPath("${escaped}");
-      const picker = $.NSSharingServicePicker.alloc.initWithItems([url]);
+      const picker = $.NSSharingServicePicker.alloc.initWithItems([${messageItem}url]);
       const mouse = $.NSEvent.mouseLocation;
       const rect = $.NSMakeRect(mouse.x, mouse.y, 1, 1);
       const view = $.NSView.alloc.initWithFrame(rect);

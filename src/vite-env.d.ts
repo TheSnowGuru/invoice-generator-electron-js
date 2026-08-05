@@ -38,8 +38,9 @@ declare global {
       readFileForShare: (
         filePath: string
       ) => Promise<{ name: string; mime: string; data: Uint8Array }>;
-      shareMac: (filePath: string) => Promise<boolean>;
-      shareWhatsApp: (filePath: string) => Promise<boolean>;
+      shareMac: (filePath: string, message?: string) => Promise<boolean>;
+      shareWhatsApp: (filePath: string, message?: string) => Promise<boolean>;
+      shareEmail: (filePath: string, subject: string, body: string) => Promise<boolean>;
     };
   }
 }

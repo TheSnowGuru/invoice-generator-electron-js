@@ -12,6 +12,9 @@ import type { Client, Invoice, Offer } from '../types';
 import {
   ACCENT_PRESETS,
   applyVatRateToItems,
+  calcTotals,
+  formatDateUk,
+  formatGbp,
   isSameCountry,
   resolveVatRate,
 } from '../types';
@@ -61,6 +64,7 @@ export default function DocumentStudio({ session, onClose }: Props) {
 
   const [busy, setBusy] = useState(false);
   const [savedPath, setSavedPath] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const [invoiceDraft, setInvoiceDraft] = useState<Invoice | null>(
     session.kind === 'invoice' ? { ...session.invoice, items: session.invoice.items.map((i) => ({ ...i })) } : null
   );
@@ -113,6 +117,38 @@ export default function DocumentStudio({ session, onClose }: Props) {
       : offerStyle === 'pricing'
         ? 'Pricing offer'
         : 'Quotation';
+
+  // Friendly message used as email subject/body and WhatsApp/share-sheet text.
+  const shareMessage = useMemo(() => {
+    const draft = session.kind === 'invoice' ? invoiceDraft : offerDraft;
+    const number = draft?.number ?? '';
+    const total = formatGbp(calcTotals(draft?.items ?? []).total);
+    const companyName = company.name || 'MyFinance';
+    const greeting = `Hi${client ? ` ${client.contactName || client.name}` : ''},`;
+
+    let intro: string;
+    if (session.kind === 'invoice') {
+      const due = invoiceDraft?.dueDate ? formatDateUk(invoiceDraft.dueDate) : '';
+      if (docKind === 'receipt') {
+        intro = `Please find attached receipt ${number} for ${total}. Thank you for your payment!`;
+      } else if (docKind === 'reminder') {
+        intro = `This is a friendly reminder that invoice ${number} for ${total} is still outstanding${due ? ` (due ${due})` : ''}. The document is attached for your convenience.`;
+      } else if (docKind === 'proforma') {
+        intro = `Please find attached proforma invoice ${number} for ${total}.`;
+      } else {
+        intro = `Please find attached invoice ${number} for ${total}${due ? `, due by ${due}` : ''}. Thank you for your business!`;
+      }
+    } else {
+      const label = offerStyle === 'pricing' ? 'pricing offer' : 'quotation';
+      const valid = offerDraft?.validUntil ? formatDateUk(offerDraft.validUntil) : '';
+      intro = `Please find attached our ${label} ${number} for ${total}${valid ? `, valid until ${valid}` : ''}. We'd love to work with you!`;
+    }
+
+    return {
+      subject: `${title} ${number} from ${companyName}`,
+      body: `${greeting}\n\n${intro}\n\nBest regards,\n${companyName}`,
+    };
+  }, [session.kind, invoiceDraft, offerDraft, docKind, offerStyle, client, company.name, title]);
 
   const saveDraft = async () => {
     if (!client) {
@@ -172,18 +208,18 @@ export default function DocumentStudio({ session, onClose }: Props) {
       if (navigator.canShare?.({ files: [shareFile] })) {
         await navigator.share({
           files: [shareFile],
-          title: file.name,
-          text: `Sharing ${file.name}`,
+          title: shareMessage.subject,
+          text: shareMessage.body,
         });
         setToast('Shared');
         return;
       }
-      const ok = await window.flowstate.shareMac(savedPath);
+      const ok = await window.flowstate.shareMac(savedPath, shareMessage.body);
       setToast(ok ? 'Share sheet opened' : 'Shown in Finder — use Share from there');
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') return;
       try {
-        await window.flowstate.shareMac(savedPath);
+        await window.flowstate.shareMac(savedPath, shareMessage.body);
         setToast('Share sheet opened');
       } catch (err) {
         setToast(err instanceof Error ? err.message : 'Share failed');
@@ -191,11 +227,29 @@ export default function DocumentStudio({ session, onClose }: Props) {
     }
   };
 
+  const shareEmail = async () => {
+    if (!savedPath) return;
+    try {
+      const ok = await window.flowstate.shareEmail(
+        savedPath,
+        shareMessage.subject,
+        shareMessage.body
+      );
+      setToast(
+        ok
+          ? 'Email drafted with the PDF attached'
+          : 'Email opened — attach the PDF from the Finder window'
+      );
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : 'Email share failed');
+    }
+  };
+
   const shareWhatsApp = async () => {
     if (!savedPath) return;
     try {
-      await window.flowstate.shareWhatsApp(savedPath);
-      setToast('Opened in WhatsApp');
+      await window.flowstate.shareWhatsApp(savedPath, shareMessage.body);
+      setToast('WhatsApp opened with your message — press \u2318V to attach the PDF');
     } catch (e) {
       setToast(e instanceof Error ? e.message : 'WhatsApp share failed');
     }
@@ -239,6 +293,9 @@ export default function DocumentStudio({ session, onClose }: Props) {
             <div className="stack-sm">
               <button className="btn btn-primary btn-sm" onClick={shareApple}>
                 Share…
+              </button>
+              <button className="btn btn-sm" onClick={shareEmail}>
+                Email
               </button>
               <button className="btn btn-sm" onClick={shareWhatsApp}>
                 WhatsApp
@@ -450,30 +507,58 @@ export default function DocumentStudio({ session, onClose }: Props) {
           </aside>
 
           <section className="studio-preview">
-            <div className="studio-preview-label">
-              Live preview
-              {!client && <span className="studio-preview-note"> · sample client shown — select a client to personalise</span>}
-            </div>
-            <div className="studio-preview-scroll">
-              {session.kind === 'invoice' && invoiceDraft ? (
-                <InvoiceDocumentPreview
-                  invoice={invoiceDraft}
-                  client={client ?? SAMPLE_CLIENT}
-                  company={company}
-                  kind={docKind}
-                  payments={payments}
-                  logoUrl={logoUrl}
-                />
-              ) : session.kind === 'offer' && offerDraft ? (
-                <OfferDocumentPreview
-                  offer={offerDraft}
-                  client={client ?? SAMPLE_CLIENT}
-                  company={company}
-                  style={offerStyle}
-                  logoUrl={logoUrl}
-                />
-              ) : null}
-            </div>
+            {!showPreview ? (
+              <button
+                type="button"
+                className="studio-preview-placeholder"
+                onClick={() => setShowPreview(true)}
+              >
+                <span className="studio-preview-placeholder-icon">◪</span>
+                <strong>Show live preview</strong>
+                <span>Click to render a preview of the {title.toLowerCase()}</span>
+              </button>
+            ) : (
+              <>
+                <div className="studio-preview-label">
+                  <span>
+                    Live preview
+                    {!client && (
+                      <span className="studio-preview-note">
+                        {' '}
+                        · sample client shown — select a client to personalise
+                      </span>
+                    )}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-ghost"
+                    onClick={() => setShowPreview(false)}
+                  >
+                    Hide
+                  </button>
+                </div>
+                <div className="studio-preview-scroll">
+                  {session.kind === 'invoice' && invoiceDraft ? (
+                    <InvoiceDocumentPreview
+                      invoice={invoiceDraft}
+                      client={client ?? SAMPLE_CLIENT}
+                      company={company}
+                      kind={docKind}
+                      payments={payments}
+                      logoUrl={logoUrl}
+                    />
+                  ) : session.kind === 'offer' && offerDraft ? (
+                    <OfferDocumentPreview
+                      offer={offerDraft}
+                      client={client ?? SAMPLE_CLIENT}
+                      company={company}
+                      style={offerStyle}
+                      logoUrl={logoUrl}
+                    />
+                  ) : null}
+                </div>
+              </>
+            )}
           </section>
         </div>
       </div>

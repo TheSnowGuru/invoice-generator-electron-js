@@ -47,9 +47,12 @@ const api = {
     filePath: string
   ): Promise<{ name: string; mime: string; data: Uint8Array }> =>
     ipcRenderer.invoke('share:readFile', filePath),
-  shareMac: (filePath: string): Promise<boolean> => ipcRenderer.invoke('share:mac', filePath),
-  shareWhatsApp: (filePath: string): Promise<boolean> =>
-    ipcRenderer.invoke('share:whatsapp', filePath),
+  shareMac: (filePath: string, message?: string): Promise<boolean> =>
+    ipcRenderer.invoke('share:mac', filePath, message),
+  shareWhatsApp: (filePath: string, message?: string): Promise<boolean> =>
+    ipcRenderer.invoke('share:whatsapp', filePath, message),
+  shareEmail: (filePath: string, subject: string, body: string): Promise<boolean> =>
+    ipcRenderer.invoke('share:email', filePath, subject, body),
 };
 
 contextBridge.exposeInMainWorld('flowstate', api);
