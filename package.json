@@ -56,7 +56,7 @@
       "gatekeeperAssess": false
     },
     "win": {
-      "icon": "build/icon.png",
+      "icon": "build/icon.ico",
       "target": [
         {
           "target": "nsis",
@@ -66,12 +66,10 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "installerIcon": "build/icon.png",
-      "uninstallerIcon": "build/icon.png"
+      "allowToChangeInstallationDirectory": true
     },
     "dmg": {
-      "title": "MyFinance",
+      "title": "MyFinance-${arch}",
       "contents": [
         { "x": 130, "y": 220 },
         { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
