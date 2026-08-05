@@ -1,0 +1,52 @@
+{
+  "name": "flowstate-finance",
+  "version": "1.0.0",
+  "description": "FlowState Finance — UK invoice & offer generator for freelancers and SMEs",
+  "main": "dist-electron/main.js",
+  "author": "FlowState",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "electron:build": "vite build && electron-builder --mac",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit"
+  },
+  "dependencies": {
+    "pdfkit": "^0.16.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "recharts": "^2.13.3",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/pdfkit": "^0.13.5",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11",
+    "vite-plugin-electron": "^0.28.8",
+    "vite-plugin-electron-renderer": "^0.14.6"
+  },
+  "build": {
+    "appId": "com.flowstate.finance",
+    "productName": "FlowState Finance",
+    "directories": {
+      "output": "release"
+    },
+    "mac": {
+      "category": "public.app-category.finance",
+      "target": ["dmg", "zip"]
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "extraResources": []
+  }
+}
