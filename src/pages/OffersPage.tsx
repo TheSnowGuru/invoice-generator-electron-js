@@ -101,6 +101,8 @@ export default function OffersPage() {
 
   const convertToInvoice = async (offer: Offer) => {
     const now = new Date().toISOString();
+    const client = clientMap.get(offer.clientId);
+    const vatRate = resolveVatRate(company.country, client?.country, company.defaultVatRate);
     await saveInvoice({
       id: newId(),
       number: `${company.invoicePrefix}${company.nextInvoiceNumber}`,
@@ -109,7 +111,7 @@ export default function OffersPage() {
       issueDate: todayIso(),
       dueDate: addDaysIso(30),
       currency: 'GBP',
-      items: offer.items.map((i) => ({ ...i, id: newId() })),
+      items: offer.items.map((i) => ({ ...i, id: newId(), vatRate })),
       notes: company.defaultNotes,
       createdAt: now,
       updatedAt: now,

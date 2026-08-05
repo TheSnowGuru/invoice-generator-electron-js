@@ -264,7 +264,7 @@ export default function DocumentStudio({ session, onClose }: Props) {
                     <label>Client</label>
                     <select
                       value={offerDraft.clientId}
-                      onChange={(e) => setOfferDraft({ ...offerDraft, clientId: e.target.value })}
+                      onChange={(e) => selectOfferClient(e.target.value)}
                     >
                       <option value="">Select client…</option>
                       {clients.map((c) => (
@@ -309,7 +309,8 @@ export default function DocumentStudio({ session, onClose }: Props) {
                   <label>Line items</label>
                   <LineItemsEditor
                     items={offerDraft.items}
-                    defaultVatRate={company.defaultVatRate}
+                    defaultVatRate={vatRate}
+                    vatHint={vatHint}
                     onChange={(items) => setOfferDraft({ ...offerDraft, items })}
                   />
                 </div>
