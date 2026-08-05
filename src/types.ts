@@ -27,6 +27,7 @@ export interface CompanySettings {
   bankIban: string;
   bankBic: string;
   accentColor: string;
+  theme: 'dark' | 'light';
   logoPath: string;
   invoicePrefix: string;
   offerPrefix: string;

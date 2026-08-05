@@ -29,6 +29,10 @@ function getOffersPdfDir() {
   return dir;
 }
 
+function windowBg(theme?: string) {
+  return theme === 'light' ? '#f4f7fb' : '#0f172a';
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -36,7 +40,7 @@ function createWindow() {
     minWidth: 960,
     minHeight: 640,
     title: 'FlowState Finance',
-    backgroundColor: '#0f172a',
+    backgroundColor: windowBg(store.getCompany().theme),
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 16, y: 16 },
     webPreferences: {
@@ -61,7 +65,11 @@ function registerIpc() {
 
   // ---- Company ----
   ipcMain.handle('company:get', () => store.getCompany());
-  ipcMain.handle('company:save', (_e, company: CompanySettings) => store.saveCompany(company));
+  ipcMain.handle('company:save', (_e, company: CompanySettings) => {
+    const saved = store.saveCompany(company);
+    mainWindow?.setBackgroundColor(windowBg(saved.theme));
+    return saved;
+  });
 
   // ---- Clients ----
   ipcMain.handle('clients:list', () => store.listClients());

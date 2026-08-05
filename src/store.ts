@@ -37,6 +37,7 @@ const empty: AppData = {
     bankIban: '',
     bankBic: '',
     accentColor: '#38bdf8',
+    theme: 'dark',
     logoPath: '',
     invoicePrefix: 'INV-',
     offerPrefix: 'OFF-',

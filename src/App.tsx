@@ -47,6 +47,8 @@ export default function App() {
   }, [load]);
 
   useEffect(() => {
+    const theme = company?.theme === 'light' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
     if (company?.accentColor) {
       document.documentElement.style.setProperty('--accent', company.accentColor);
       document.documentElement.style.setProperty(
@@ -54,7 +56,7 @@ export default function App() {
         `${company.accentColor}26`
       );
     }
-  }, [company?.accentColor]);
+  }, [company?.accentColor, company?.theme]);
 
   const meta = titles[location.pathname] ?? titles['/'];
 

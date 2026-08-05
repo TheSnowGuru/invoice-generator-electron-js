@@ -34,6 +34,11 @@ export default function SettingsPage() {
     setForm((f) => ({ ...f, [key]: value }));
   };
 
+  const setTheme = (theme: 'dark' | 'light') => {
+    set('theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  };
+
   const pickLogo = async () => {
     const path = await window.flowstate.pickLogo();
     if (path) set('logoPath', path);
@@ -97,6 +102,33 @@ export default function SettingsPage() {
       </div>
 
       <div>
+        <div className="panel">
+          <div className="panel-header">
+            <h3>Appearance</h3>
+          </div>
+          <div className="field">
+            <label>App theme</label>
+            <div className="theme-toggle">
+              <button
+                type="button"
+                className={`theme-option${(form.theme || 'dark') === 'dark' ? ' active' : ''}`}
+                onClick={() => setTheme('dark')}
+              >
+                <strong>Dark</strong>
+                <span>Navy / slate for low light</span>
+              </button>
+              <button
+                type="button"
+                className={`theme-option${form.theme === 'light' ? ' active' : ''}`}
+                onClick={() => setTheme('light')}
+              >
+                <strong>Light</strong>
+                <span>Bright workspace for daytime</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="panel">
           <div className="panel-header">
             <h3>Branding</h3>

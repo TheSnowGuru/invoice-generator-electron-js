@@ -27,6 +27,7 @@ export interface CompanySettings {
   bankIban: string;
   bankBic: string;
   accentColor: string;
+  theme: 'dark' | 'light';
   logoPath: string;
   invoicePrefix: string;
   offerPrefix: string;
@@ -122,6 +123,7 @@ export const DEFAULT_COMPANY: CompanySettings = {
   bankIban: '',
   bankBic: '',
   accentColor: '#38bdf8',
+  theme: 'dark',
   logoPath: '',
   invoicePrefix: 'INV-',
   offerPrefix: 'OFF-',

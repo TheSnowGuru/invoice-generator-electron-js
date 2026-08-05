@@ -27,6 +27,19 @@ export default function Dashboard() {
   const payments = useAppStore((s) => s.payments);
   const clients = useAppStore((s) => s.clients);
   const offers = useAppStore((s) => s.offers);
+  const theme = useAppStore((s) => s.company.theme) || 'dark';
+  const isLight = theme === 'light';
+
+  const chartStyle = {
+    grid: isLight ? 'rgba(15,23,42,0.1)' : 'rgba(148,163,184,0.15)',
+    axis: isLight ? '#64748b' : '#94a3b8',
+    tooltip: {
+      background: isLight ? '#ffffff' : '#111827',
+      border: isLight ? '1px solid rgba(15,23,42,0.12)' : '1px solid rgba(148,163,184,0.2)',
+      borderRadius: 8,
+      color: isLight ? '#0f172a' : '#e8eef7',
+    },
+  };
 
   const stats = useMemo(() => {
     let invoiced = 0;
@@ -131,16 +144,12 @@ export default function Dashboard() {
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={monthly}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.15)" />
-                <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
-                <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={(v) => `£${v}`} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartStyle.grid} />
+                <XAxis dataKey="month" stroke={chartStyle.axis} fontSize={12} />
+                <YAxis stroke={chartStyle.axis} fontSize={12} tickFormatter={(v) => `£${v}`} />
                 <Tooltip
                   formatter={(v: number) => formatGbp(v)}
-                  contentStyle={{
-                    background: '#111827',
-                    border: '1px solid rgba(148,163,184,0.2)',
-                    borderRadius: 8,
-                  }}
+                  contentStyle={chartStyle.tooltip}
                 />
                 <Bar dataKey="amount" fill="var(--accent)" radius={[6, 6, 0, 0]} />
               </BarChart>
@@ -164,11 +173,7 @@ export default function Dashboard() {
                 </Pie>
                 <Tooltip
                   formatter={(v: number) => formatGbp(v)}
-                  contentStyle={{
-                    background: '#111827',
-                    border: '1px solid rgba(148,163,184,0.2)',
-                    borderRadius: 8,
-                  }}
+                  contentStyle={chartStyle.tooltip}
                 />
               </PieChart>
             </ResponsiveContainer>
