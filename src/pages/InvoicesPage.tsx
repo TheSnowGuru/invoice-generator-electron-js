@@ -6,7 +6,6 @@ import DocumentStudio, { type StudioSession } from '../components/DocumentStudio
 import type { InvoiceDocKind } from '../components/DocumentPreview';
 import type { Invoice, InvoiceStatus, Payment } from '../types';
 import {
-  addDaysIso,
   applyVatRateToItems,
   calcTotals,
   formatDateUk,
@@ -17,31 +16,7 @@ import {
   resolveVatRate,
   todayIso,
 } from '../types';
-
-function blankInvoice(prefix: string, next: number, vat: number, notes: string): Invoice {
-  const now = new Date().toISOString();
-  return {
-    id: newId(),
-    number: `${prefix}${next}`,
-    clientId: '',
-    status: 'draft',
-    issueDate: todayIso(),
-    dueDate: addDaysIso(30),
-    currency: 'GBP',
-    items: [
-      {
-        id: newId(),
-        description: '',
-        quantity: 1,
-        unitPrice: 0,
-        vatRate: vat,
-      },
-    ],
-    notes,
-    createdAt: now,
-    updatedAt: now,
-  };
-}
+import { newInvoiceDraft } from '../lib/documents';
 
 export default function InvoicesPage() {
   const invoices = useAppStore((s) => s.invoices);
@@ -94,14 +69,7 @@ export default function InvoicesPage() {
     .sort((a, b) => b.issueDate.localeCompare(a.issueDate));
 
   const openNew = () => {
-    setEditing(
-      blankInvoice(
-        company.invoicePrefix,
-        company.nextInvoiceNumber,
-        company.defaultVatRate,
-        company.defaultNotes
-      )
-    );
+    setStudio({ kind: 'invoice', invoice: newInvoiceDraft(company), docKind: 'invoice' });
   };
 
   const persist = async () => {

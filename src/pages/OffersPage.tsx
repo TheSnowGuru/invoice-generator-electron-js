@@ -16,32 +16,7 @@ import {
   resolveVatRate,
   todayIso,
 } from '../types';
-
-function blankOffer(prefix: string, next: number, vat: number): Offer {
-  const now = new Date().toISOString();
-  return {
-    id: newId(),
-    number: `${prefix}${next}`,
-    clientId: '',
-    status: 'draft',
-    issueDate: todayIso(),
-    validUntil: addDaysIso(14),
-    currency: 'GBP',
-    items: [
-      {
-        id: newId(),
-        description: '',
-        quantity: 1,
-        unitPrice: 0,
-        vatRate: vat,
-      },
-    ],
-    notes: 'This quotation is valid until the date shown above.',
-    terms: 'Prices exclude expenses unless stated. Work begins upon written acceptance.',
-    createdAt: now,
-    updatedAt: now,
-  };
-}
+import { newOfferDraft } from '../lib/documents';
 
 export default function OffersPage() {
   const offers = useAppStore((s) => s.offers);
@@ -82,7 +57,7 @@ export default function OffersPage() {
   const sorted = [...offers].sort((a, b) => b.issueDate.localeCompare(a.issueDate));
 
   const openNew = () => {
-    setEditing(blankOffer(company.offerPrefix, company.nextOfferNumber, company.defaultVatRate));
+    setStudio({ kind: 'offer', offer: newOfferDraft(company), style: 'pricing' });
   };
 
   const persist = async () => {

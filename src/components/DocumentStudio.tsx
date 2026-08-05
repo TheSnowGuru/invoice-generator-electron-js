@@ -32,6 +32,24 @@ const INVOICE_KIND_LABELS: Record<InvoiceDocKind, string> = {
   reminder: 'Payment reminder',
 };
 
+/** Placeholder shown in the preview until a real client is selected. */
+const SAMPLE_CLIENT: Client = {
+  id: '',
+  name: 'Sample Client Ltd',
+  contactName: 'Jane Doe',
+  email: 'client@example.com',
+  phone: '',
+  addressLine1: '10 Sample Street',
+  addressLine2: '',
+  city: 'London',
+  postcode: 'EC1A 1BB',
+  country: 'United Kingdom',
+  vatNumber: '',
+  notes: '',
+  createdAt: '',
+  updatedAt: '',
+};
+
 export default function DocumentStudio({ session, onClose }: Props) {
   const company = useAppStore((s) => s.company);
   const clients = useAppStore((s) => s.clients);
@@ -96,6 +114,22 @@ export default function DocumentStudio({ session, onClose }: Props) {
         ? 'Pricing offer'
         : 'Quotation';
 
+  const saveDraft = async () => {
+    if (!client) {
+      setToast('Select a client first');
+      return;
+    }
+    const stamp = new Date().toISOString();
+    if (session.kind === 'invoice' && invoiceDraft) {
+      await saveInvoice({ ...invoiceDraft, updatedAt: stamp });
+      setToast('Invoice saved');
+    } else if (session.kind === 'offer' && offerDraft) {
+      await saveOffer({ ...offerDraft, updatedAt: stamp });
+      setToast('Offer saved');
+    }
+    onClose();
+  };
+
   const generate = async () => {
     if (!client) {
       setToast('Select a client first');
@@ -133,7 +167,7 @@ export default function DocumentStudio({ session, onClose }: Props) {
     if (!savedPath) return;
     try {
       const file = await window.flowstate.readFileForShare(savedPath);
-      const blob = new Blob([file.data], { type: file.mime });
+      const blob = new Blob([new Uint8Array(file.data)], { type: file.mime });
       const shareFile = new File([blob], file.name, { type: file.mime });
       if (navigator.canShare?.({ files: [shareFile] })) {
         await navigator.share({
@@ -182,9 +216,14 @@ export default function DocumentStudio({ session, onClose }: Props) {
               {savedPath ? 'Done' : 'Cancel'}
             </button>
             {!savedPath && (
-              <button className="btn btn-primary" onClick={generate} disabled={busy || !client}>
-                {busy ? 'Generating…' : 'Generate PDF'}
-              </button>
+              <>
+                <button className="btn" onClick={saveDraft} disabled={busy || !client}>
+                  Save draft
+                </button>
+                <button className="btn btn-primary" onClick={generate} disabled={busy || !client}>
+                  {busy ? 'Generating…' : 'Generate PDF'}
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -411,14 +450,15 @@ export default function DocumentStudio({ session, onClose }: Props) {
           </aside>
 
           <section className="studio-preview">
-            <div className="studio-preview-label">Live preview</div>
+            <div className="studio-preview-label">
+              Live preview
+              {!client && <span className="studio-preview-note"> · sample client shown — select a client to personalise</span>}
+            </div>
             <div className="studio-preview-scroll">
-              {!client ? (
-                <div className="empty">Select a client to preview the document</div>
-              ) : session.kind === 'invoice' && invoiceDraft ? (
+              {session.kind === 'invoice' && invoiceDraft ? (
                 <InvoiceDocumentPreview
                   invoice={invoiceDraft}
-                  client={client}
+                  client={client ?? SAMPLE_CLIENT}
                   company={company}
                   kind={docKind}
                   payments={payments}
@@ -427,7 +467,7 @@ export default function DocumentStudio({ session, onClose }: Props) {
               ) : session.kind === 'offer' && offerDraft ? (
                 <OfferDocumentPreview
                   offer={offerDraft}
-                  client={client}
+                  client={client ?? SAMPLE_CLIENT}
                   company={company}
                   style={offerStyle}
                   logoUrl={logoUrl}
