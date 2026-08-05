@@ -2,18 +2,21 @@ import { useMemo, useState } from 'react';
 import { useAppStore } from '../store';
 import LineItemsEditor from '../components/LineItemsEditor';
 import ActionMenu from '../components/ActionMenu';
+import DocumentStudio, { type StudioSession } from '../components/DocumentStudio';
+import type { InvoiceDocKind } from '../components/DocumentPreview';
 import type { Invoice, InvoiceStatus, Payment } from '../types';
 import {
   addDaysIso,
+  applyVatRateToItems,
   calcTotals,
   formatDateUk,
   formatGbp,
+  isSameCountry,
   newId,
   paidAmount,
+  resolveVatRate,
   todayIso,
 } from '../types';
-
-type InvoiceDocKind = 'invoice' | 'proforma' | 'receipt' | 'reminder';
 
 function blankInvoice(prefix: string, next: number, vat: number, notes: string): Invoice {
   const now = new Date().toISOString();
@@ -52,6 +55,7 @@ export default function InvoicesPage() {
 
   const [editing, setEditing] = useState<Invoice | null>(null);
   const [paying, setPaying] = useState<Invoice | null>(null);
+  const [studio, setStudio] = useState<StudioSession | null>(null);
   const [paymentForm, setPaymentForm] = useState({
     amount: 0,
     date: todayIso(),
@@ -62,6 +66,28 @@ export default function InvoicesPage() {
   const [filter, setFilter] = useState<'all' | InvoiceStatus>('all');
 
   const clientMap = useMemo(() => new Map(clients.map((c) => [c.id, c])), [clients]);
+
+  const editingClient = editing ? clientMap.get(editing.clientId) : undefined;
+  const editingVatRate = resolveVatRate(
+    company.country,
+    editingClient?.country,
+    company.defaultVatRate
+  );
+  const editingVatHint =
+    editingClient && !isSameCountry(company.country, editingClient.country)
+      ? `Client is in ${editingClient.country || 'another country'} (company: ${company.country || '—'}). VAT defaults to 0%.`
+      : null;
+
+  const selectInvoiceClient = (clientId: string) => {
+    if (!editing) return;
+    const client = clientMap.get(clientId);
+    const vatRate = resolveVatRate(company.country, client?.country, company.defaultVatRate);
+    setEditing({
+      ...editing,
+      clientId,
+      items: applyVatRateToItems(editing.items, vatRate),
+    });
+  };
 
   const filtered = invoices
     .filter((i) => (filter === 'all' ? true : i.status === filter))
@@ -92,20 +118,8 @@ export default function InvoicesPage() {
     setEditing(null);
   };
 
-  const generateDoc = async (id: string, kind: InvoiceDocKind) => {
-    try {
-      const path = await window.flowstate.generateInvoicePdf(id, kind);
-      const labels: Record<InvoiceDocKind, string> = {
-        invoice: 'Tax invoice',
-        proforma: 'Proforma invoice',
-        receipt: 'Receipt',
-        reminder: 'Payment reminder',
-      };
-      setToast(`${labels[kind]} saved`);
-      await window.flowstate.openPdf(path);
-    } catch (e) {
-      setToast(e instanceof Error ? e.message : 'PDF failed');
-    }
+  const openStudio = (invoice: Invoice, docKind: InvoiceDocKind) => {
+    setStudio({ kind: 'invoice', invoice, docKind });
   };
 
   const openPay = (inv: Invoice) => {
@@ -213,25 +227,25 @@ export default function InvoicesPage() {
                               label: 'Generate tax invoice',
                               hint: 'VAT tax invoice PDF',
                               separatorBefore: true,
-                              onClick: () => generateDoc(inv.id, 'invoice'),
+                              onClick: () => openStudio(inv, 'invoice'),
                             },
                             {
                               id: 'proforma',
                               label: 'Generate proforma',
                               hint: 'Not a tax invoice',
-                              onClick: () => generateDoc(inv.id, 'proforma'),
+                              onClick: () => openStudio(inv, 'proforma'),
                             },
                             {
                               id: 'receipt',
                               label: 'Generate receipt',
                               hint: 'Payment acknowledgement',
-                              onClick: () => generateDoc(inv.id, 'receipt'),
+                              onClick: () => openStudio(inv, 'receipt'),
                             },
                             {
                               id: 'reminder',
                               label: 'Generate payment reminder',
                               hint: 'Outstanding balance notice',
-                              onClick: () => generateDoc(inv.id, 'reminder'),
+                              onClick: () => openStudio(inv, 'reminder'),
                             },
                             {
                               id: 'pay',
@@ -260,6 +274,8 @@ export default function InvoicesPage() {
         )}
       </div>
 
+      {studio && <DocumentStudio session={studio} onClose={() => setStudio(null)} />}
+
       {editing && (
         <div className="modal-backdrop" onClick={() => setEditing(null)}>
           <div className="modal wide" onClick={(e) => e.stopPropagation()}>
@@ -287,7 +303,7 @@ export default function InvoicesPage() {
                 <label>Client</label>
                 <select
                   value={editing.clientId}
-                  onChange={(e) => setEditing({ ...editing, clientId: e.target.value })}
+                  onChange={(e) => selectInvoiceClient(e.target.value)}
                 >
                   <option value="">Select client…</option>
                   {clients.map((c) => (
@@ -332,7 +348,8 @@ export default function InvoicesPage() {
                 <label>Line items</label>
                 <LineItemsEditor
                   items={editing.items}
-                  defaultVatRate={company.defaultVatRate}
+                  defaultVatRate={editingVatRate}
+                  vatHint={editingVatHint}
                   onChange={(items) => setEditing({ ...editing, items })}
                 />
               </div>

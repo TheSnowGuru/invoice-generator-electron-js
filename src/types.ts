@@ -163,3 +163,52 @@ export function paidAmount(invoiceId: string, payments: Payment[]): number {
 export function newId(): string {
   return crypto.randomUUID();
 }
+
+/** Normalize country names for comparison (UK aliases, casing, whitespace). */
+export function normalizeCountry(country: string): string {
+  const raw = (country || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!raw) return '';
+  const aliases: Record<string, string> = {
+    uk: 'united kingdom',
+    'u.k.': 'united kingdom',
+    'u.k': 'united kingdom',
+    gb: 'united kingdom',
+    'great britain': 'united kingdom',
+    britain: 'united kingdom',
+    england: 'united kingdom',
+    scotland: 'united kingdom',
+    wales: 'united kingdom',
+    'northern ireland': 'united kingdom',
+    usa: 'united states',
+    us: 'united states',
+    'u.s.': 'united states',
+    'u.s.a.': 'united states',
+    'united states of america': 'united states',
+  };
+  return aliases[raw] ?? raw;
+}
+
+export function isSameCountry(a: string, b: string): boolean {
+  const na = normalizeCountry(a);
+  const nb = normalizeCountry(b);
+  if (!na || !nb) return true; // incomplete data — keep default VAT
+  return na === nb;
+}
+
+/**
+ * VAT for line items: company default when client is in the same country,
+ * otherwise 0% (cross-border / export).
+ */
+export function resolveVatRate(
+  companyCountry: string,
+  clientCountry: string | undefined,
+  defaultVatRate: number
+): number {
+  if (!clientCountry) return defaultVatRate;
+  return isSameCountry(companyCountry, clientCountry) ? defaultVatRate : 0;
+}
+
+export function applyVatRateToItems(items: LineItem[], vatRate: number): LineItem[] {
+  return items.map((item) => ({ ...item, vatRate }));
+}
+

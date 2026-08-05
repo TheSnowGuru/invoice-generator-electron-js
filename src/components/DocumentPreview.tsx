@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Client, CompanySettings, Invoice, LineItem, Offer, Payment } from '../types';
 import {
   calcLineNet,
@@ -523,5 +523,3 @@ export function useLogoUrl(logoPath: string) {
   }, [logoPath]);
   return logoUrl;
 }
-
-void useMemo;

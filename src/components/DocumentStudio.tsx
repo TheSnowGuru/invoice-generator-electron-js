@@ -9,7 +9,12 @@ import {
   type OfferDocStyle,
 } from './DocumentPreview';
 import type { Client, Invoice, Offer } from '../types';
-import { ACCENT_PRESETS } from '../types';
+import {
+  ACCENT_PRESETS,
+  applyVatRateToItems,
+  isSameCountry,
+  resolveVatRate,
+} from '../types';
 
 export type StudioSession =
   | { kind: 'invoice'; invoice: Invoice; docKind: InvoiceDocKind }
@@ -54,6 +59,34 @@ export default function DocumentStudio({ session, onClose }: Props) {
     const id = invoiceDraft?.clientId || offerDraft?.clientId;
     return clients.find((c) => c.id === id);
   }, [clients, invoiceDraft?.clientId, offerDraft?.clientId]);
+
+  const vatRate = resolveVatRate(company.country, client?.country, company.defaultVatRate);
+  const vatHint =
+    client && !isSameCountry(company.country, client.country)
+      ? `Client is in ${client.country || 'another country'} (company: ${company.country || '—'}). VAT defaults to 0%.`
+      : null;
+
+  const selectInvoiceClient = (clientId: string) => {
+    if (!invoiceDraft) return;
+    const next = clients.find((c) => c.id === clientId);
+    const rate = resolveVatRate(company.country, next?.country, company.defaultVatRate);
+    setInvoiceDraft({
+      ...invoiceDraft,
+      clientId,
+      items: applyVatRateToItems(invoiceDraft.items, rate),
+    });
+  };
+
+  const selectOfferClient = (clientId: string) => {
+    if (!offerDraft) return;
+    const next = clients.find((c) => c.id === clientId);
+    const rate = resolveVatRate(company.country, next?.country, company.defaultVatRate);
+    setOfferDraft({
+      ...offerDraft,
+      clientId,
+      items: applyVatRateToItems(offerDraft.items, rate),
+    });
+  };
 
   const title =
     session.kind === 'invoice'
@@ -145,9 +178,7 @@ export default function DocumentStudio({ session, onClose }: Props) {
                     <label>Client</label>
                     <select
                       value={invoiceDraft.clientId}
-                      onChange={(e) =>
-                        setInvoiceDraft({ ...invoiceDraft, clientId: e.target.value })
-                      }
+                      onChange={(e) => selectInvoiceClient(e.target.value)}
                     >
                       <option value="">Select client…</option>
                       {clients.map((c) => (
@@ -194,7 +225,8 @@ export default function DocumentStudio({ session, onClose }: Props) {
                   <label>Line items</label>
                   <LineItemsEditor
                     items={invoiceDraft.items}
-                    defaultVatRate={company.defaultVatRate}
+                    defaultVatRate={vatRate}
+                    vatHint={vatHint}
                     onChange={(items) => setInvoiceDraft({ ...invoiceDraft, items })}
                   />
                 </div>

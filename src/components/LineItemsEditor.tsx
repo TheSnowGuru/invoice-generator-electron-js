@@ -5,9 +5,10 @@ interface Props {
   items: LineItem[];
   defaultVatRate: number;
   onChange: (items: LineItem[]) => void;
+  vatHint?: string | null;
 }
 
-export default function LineItemsEditor({ items, defaultVatRate, onChange }: Props) {
+export default function LineItemsEditor({ items, defaultVatRate, onChange, vatHint }: Props) {
   const totals = calcTotals(items);
 
   const update = (id: string, patch: Partial<LineItem>) => {
@@ -33,6 +34,7 @@ export default function LineItemsEditor({ items, defaultVatRate, onChange }: Pro
 
   return (
     <div>
+      {vatHint && <p className="vat-hint">{vatHint}</p>}
       <div className="line-items">
         {items.map((item) => (
           <div className="line-item" key={item.id}>

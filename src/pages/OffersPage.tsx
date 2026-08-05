@@ -2,13 +2,18 @@ import { useMemo, useState } from 'react';
 import { useAppStore } from '../store';
 import LineItemsEditor from '../components/LineItemsEditor';
 import ActionMenu from '../components/ActionMenu';
+import DocumentStudio, { type StudioSession } from '../components/DocumentStudio';
+import type { OfferDocStyle } from '../components/DocumentPreview';
 import type { Offer, OfferStatus } from '../types';
 import {
   addDaysIso,
+  applyVatRateToItems,
   calcTotals,
   formatDateUk,
   formatGbp,
+  isSameCountry,
   newId,
+  resolveVatRate,
   todayIso,
 } from '../types';
 
@@ -48,8 +53,31 @@ export default function OffersPage() {
   const setToast = useAppStore((s) => s.setToast);
 
   const [editing, setEditing] = useState<Offer | null>(null);
+  const [studio, setStudio] = useState<StudioSession | null>(null);
 
   const clientMap = useMemo(() => new Map(clients.map((c) => [c.id, c])), [clients]);
+
+  const editingClient = editing ? clientMap.get(editing.clientId) : undefined;
+  const editingVatRate = resolveVatRate(
+    company.country,
+    editingClient?.country,
+    company.defaultVatRate
+  );
+  const editingVatHint =
+    editingClient && !isSameCountry(company.country, editingClient.country)
+      ? `Client is in ${editingClient.country || 'another country'} (company: ${company.country || '—'}). VAT defaults to 0%.`
+      : null;
+
+  const selectOfferClient = (clientId: string) => {
+    if (!editing) return;
+    const client = clientMap.get(clientId);
+    const vatRate = resolveVatRate(company.country, client?.country, company.defaultVatRate);
+    setEditing({
+      ...editing,
+      clientId,
+      items: applyVatRateToItems(editing.items, vatRate),
+    });
+  };
 
   const sorted = [...offers].sort((a, b) => b.issueDate.localeCompare(a.issueDate));
 
@@ -67,14 +95,8 @@ export default function OffersPage() {
     setEditing(null);
   };
 
-  const generatePdf = async (id: string, style: 'pricing' | 'quotation' = 'pricing') => {
-    try {
-      const path = await window.flowstate.generateOfferPdf(id, style);
-      setToast(style === 'pricing' ? 'Pricing offer PDF saved' : 'Quotation PDF saved');
-      await window.flowstate.openPdf(path);
-    } catch (e) {
-      setToast(e instanceof Error ? e.message : 'PDF failed');
-    }
+  const openStudio = (offer: Offer, style: OfferDocStyle) => {
+    setStudio({ kind: 'offer', offer, style });
   };
 
   const convertToInvoice = async (offer: Offer) => {
@@ -152,13 +174,13 @@ export default function OffersPage() {
                               label: 'Generate pricing offer',
                               hint: 'Premium proposal PDF',
                               separatorBefore: true,
-                              onClick: () => generatePdf(offer.id, 'pricing'),
+                              onClick: () => openStudio(offer, 'pricing'),
                             },
                             {
                               id: 'quotation',
                               label: 'Generate quotation',
                               hint: 'Classic quotation PDF',
-                              onClick: () => generatePdf(offer.id, 'quotation'),
+                              onClick: () => openStudio(offer, 'quotation'),
                             },
                             {
                               id: 'convert',
@@ -188,6 +210,8 @@ export default function OffersPage() {
         )}
       </div>
 
+      {studio && <DocumentStudio session={studio} onClose={() => setStudio(null)} />}
+
       {editing && (
         <div className="modal-backdrop" onClick={() => setEditing(null)}>
           <div className="modal wide" onClick={(e) => e.stopPropagation()}>
@@ -215,7 +239,7 @@ export default function OffersPage() {
                 <label>Client</label>
                 <select
                   value={editing.clientId}
-                  onChange={(e) => setEditing({ ...editing, clientId: e.target.value })}
+                  onChange={(e) => selectOfferClient(e.target.value)}
                 >
                   <option value="">Select client…</option>
                   {clients.map((c) => (
@@ -260,7 +284,8 @@ export default function OffersPage() {
                 <label>Line items</label>
                 <LineItemsEditor
                   items={editing.items}
-                  defaultVatRate={company.defaultVatRate}
+                  defaultVatRate={editingVatRate}
+                  vatHint={editingVatHint}
                   onChange={(items) => setEditing({ ...editing, items })}
                 />
               </div>
