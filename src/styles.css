@@ -21,6 +21,7 @@
   --nav-hover: rgba(255, 255, 255, 0.04);
   --row-hover: rgba(255, 255, 255, 0.02);
   --btn-hover: #243044;
+  --btn-ghost-hover: rgba(255, 255, 255, 0.08);
   --modal-backdrop: rgba(2, 6, 23, 0.72);
   --toast-bg: #0f172a;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
@@ -36,30 +37,31 @@
 [data-theme='light'] {
   --bg: #f4f7fb;
   --bg-elevated: #ffffff;
-  --bg-soft: #e8eef6;
+  --bg-soft: #e2e8f0;
   --panel: #ffffff;
-  --border: rgba(15, 23, 42, 0.08);
-  --border-strong: rgba(15, 23, 42, 0.16);
-  --input-border: rgba(15, 23, 42, 0.38);
+  --border: rgba(15, 23, 42, 0.14);
+  --border-strong: rgba(15, 23, 42, 0.28);
+  --input-border: rgba(15, 23, 42, 0.5);
   --input-border-focus: var(--accent);
   --text: #0f172a;
-  --text-muted: #475569;
-  --text-dim: #64748b;
-  --accent: #0284c7;
-  --accent-soft: rgba(2, 132, 199, 0.12);
+  --text-muted: #334155;
+  --text-dim: #475569;
+  --accent: #0369a1;
+  --accent-soft: rgba(3, 105, 161, 0.14);
   --success: #059669;
   --warning: #d97706;
   --danger: #dc2626;
-  --sidebar-bg: linear-gradient(180deg, #ffffff, #f1f5f9);
-  --topbar-bg: rgba(255, 255, 255, 0.82);
-  --nav-hover: rgba(15, 23, 42, 0.05);
-  --row-hover: rgba(15, 23, 42, 0.03);
-  --btn-hover: #dbe4f0;
+  --sidebar-bg: linear-gradient(180deg, #ffffff, #eef2f7);
+  --topbar-bg: rgba(255, 255, 255, 0.92);
+  --nav-hover: rgba(15, 23, 42, 0.07);
+  --row-hover: rgba(15, 23, 42, 0.04);
+  --btn-hover: #cbd5e1;
+  --btn-ghost-hover: rgba(15, 23, 42, 0.08);
   --modal-backdrop: rgba(15, 23, 42, 0.45);
   --toast-bg: #ffffff;
-  --shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
-  --bg-glow-1: rgba(14, 165, 233, 0.14);
-  --bg-glow-2: rgba(99, 102, 241, 0.1);
+  --shadow: 0 4px 16px rgba(15, 23, 42, 0.1), 0 0 0 1px rgba(15, 23, 42, 0.06);
+  --bg-glow-1: rgba(14, 165, 233, 0.1);
+  --bg-glow-2: rgba(99, 102, 241, 0.08);
   color-scheme: light;
 }
 
@@ -264,6 +266,24 @@ a {
 
 .btn-ghost {
   background: transparent;
+}
+
+.btn-ghost:hover {
+  background: var(--btn-ghost-hover, var(--btn-hover));
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+[data-theme='light'] .btn:hover {
+  color: var(--text);
+  border-color: rgba(15, 23, 42, 0.32);
+}
+
+[data-theme='light'] .btn-primary:hover {
+  filter: none;
+  background: #075985;
+  color: #ffffff;
+  border-color: #075985;
 }
 
 .btn-danger {
@@ -1321,6 +1341,7 @@ table.data tr:hover td {
 
 .settings-tab:hover {
   color: var(--text);
+  background: var(--nav-hover);
 }
 
 .settings-tab.active {
@@ -1508,5 +1529,55 @@ table.data tr:hover td {
   margin: 0 0 8px;
   color: #f87171;
   font-size: 0.9rem;
+}
+
+/* Light theme: stronger dashboard & form contrast */
+[data-theme='light'] .kpi {
+  border-color: var(--border-strong);
+  background: var(--bg-elevated);
+}
+
+[data-theme='light'] .kpi .label {
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+[data-theme='light'] .kpi .value {
+  color: var(--text);
+}
+
+[data-theme='light'] .kpi .hint {
+  color: var(--text-dim);
+}
+
+[data-theme='light'] .panel {
+  border-color: var(--border-strong);
+}
+
+[data-theme='light'] table.data th {
+  color: var(--text-muted);
+  border-bottom-color: var(--border-strong);
+}
+
+[data-theme='light'] table.data td {
+  border-bottom-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme='light'] .topbar .subtitle {
+  color: var(--text-muted);
+}
+
+[data-theme='light'] .field input,
+[data-theme='light'] .field select,
+[data-theme='light'] .field textarea {
+  background: var(--bg-elevated);
+}
+
+[data-theme='light'] .theme-option:hover {
+  border-color: rgba(15, 23, 42, 0.35);
+  background: var(--bg-soft);
+  color: var(--text);
 }
 

@@ -31,11 +31,11 @@ export default function Dashboard() {
   const isLight = theme === 'light';
 
   const chartStyle = {
-    grid: isLight ? 'rgba(15,23,42,0.1)' : 'rgba(148,163,184,0.15)',
-    axis: isLight ? '#64748b' : '#94a3b8',
+    grid: isLight ? 'rgba(15,23,42,0.18)' : 'rgba(148,163,184,0.15)',
+    axis: isLight ? '#334155' : '#94a3b8',
     tooltip: {
       background: isLight ? '#ffffff' : '#111827',
-      border: isLight ? '1px solid rgba(15,23,42,0.12)' : '1px solid rgba(148,163,184,0.2)',
+      border: isLight ? '1px solid rgba(15,23,42,0.22)' : '1px solid rgba(148,163,184,0.2)',
       borderRadius: 8,
       color: isLight ? '#0f172a' : '#e8eef7',
     },
