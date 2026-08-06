@@ -421,11 +421,13 @@ export default function SettingsPage() {
         <HostedAccessSettings onToast={setToast} />
       )}
 
+      {tab !== 'access' && (
       <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
         <button className="btn btn-primary" onClick={save}>
           Save settings
         </button>
       </div>
+      )}
     </div>
   );
 }

@@ -8,3 +8,5 @@ release
 .env.*
 *.local
 .vite
+.vercel
+.env*.local

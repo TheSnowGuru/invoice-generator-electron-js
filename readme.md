@@ -1,86 +1,83 @@
-This Product Requirements Document (PRD) outlines the core architecture and functionality of **FlowState Finance**, an invoice and payment tracking application tailored for UK-based small businesses and freelancers.
+# MyFinance
 
----
+UK-focused invoice, offer, and client billing app for freelancers and small businesses.
 
-# Product Requirements Document: FlowState Finance (Electron Desktop)
+- **Desktop (Electron)** — full offline app, PDFs on disk, macOS / Windows installers from [Releases](https://github.com/TheSnowGuru/invoice-generator-electron-js/releases).
+- **Web / iPad (PWA on Vercel)** — installable in Safari (**Add to Home Screen**), data in the browser; access protected by a **server-side** password (not embedded in the frontend).
 
-## 1. Executive Summary
-FlowState Finance is a professional-grade desktop application designed for UK businesses to manage the end-to-end invoice lifecycle. It focuses on UK tax compliance (VAT), multi-currency support, and professional branding, providing a localized alternative to global cloud-based accounting platforms.
+## Quick start (desktop)
 
-## 2. Target Audience
-*   UK-based freelancers, creative consultants, and small limited companies.
-*   Users requiring offline-first data sovereignty (Local Electron app).
-*   Professionals needing high-quality, branded PDF invoices with consistent UK formatting.
+```bash
+npm install
+npm run dev
+```
 
-## 3. Core Functional Requirements
+Build installers:
 
-### A. Company Configuration & Branding
-*   **Profile Management:** Store company legal details (Name, Address, Company Number, VAT Number).
-*   **Branding Engine:** 
-    *   Logo upload (PNG/JPG).
-    *   Dynamic accent color selection (custom hex or presets) applied to PDF headers and UI.
-*   **Banking Data:** Secure storage of bank details (Account Name, Sort Code, IBAN, BIC) for automated inclusion in PDF footers.
+```bash
+npm run electron:build:mac   # or electron:build:win / electron:build:all
+```
 
-### B. Invoice Management
-*   **Lifecycle:** Draft → Sent → Partially Paid → Paid → Overdue.
-*   **Creation:** 
-    *   Client database integration (lookup existing or create new).
-    *   Dynamic line-item generation (auto-calculating subtotal, VAT @ 20%, and grand total).
-    *   Customizable invoice prefixes and notes.
-*   **PDF Engine:** Professional, branded PDF generation.
-    *   Includes company header, branding colors, "Bill To" section, line-item table, VAT breakdown, and bank details.
-*   **Communication:** Email triggering (using locally managed templates) for invoice delivery and overdue reminders.
+## Web app (Vercel)
 
-### C. Financial Tracking & Reporting
-*   **Payment Tracking:** Record partial or full payments against specific invoices.
-*   **Dashboard Analytics:**
-    *   **KPI Metrics:** Total Invoiced, VAT Collected (Payable), VAT Outstanding, Monthly Trends.
-    *   **Visualizations:** Monthly invoicing bar charts, revenue distribution by status (pie chart), and client leaderboard (by revenue).
+Production URL (example): **https://myfinance-beryl.vercel.app**
 
-### D. Client Relationship Management
-*   **Client Profiles:** Manage contacts, billing addresses, and historical invoice links.
-*   **Defaulting:** UK-localized defaults (e.g., London as the default city).
+### Security model
 
-## 4. Technical Constraints (Electron Architecture)
+| Layer | What it does |
+|--------|----------------|
+| **Edge middleware** | Blocks the SPA and APIs until a valid `HttpOnly` session cookie is set. Unauthenticated users only see `login.html` and `POST /api/auth/login`. |
+| **API routes** (`/api/auth/*`) | Verify passwords with **scrypt** on the server. Session signing uses `SESSION_SECRET`. |
+| **Password storage** | Prefer **Vercel KV** (`auth:password_hash`) so you can change the password in **Settings → Web access**. Without KV, login still works from env vars but password changes require linking KV. |
+| **Frontend** | No password hashes or secrets in the JavaScript bundle (`VITE_HOSTED_AUTH` only toggles the settings UI and optional in-app sign-in fallback). |
 
-### A. Data Persistence
-*   Since the app will run as an Electron desktop instance, you must replace the existing cloud-based backend with a local database strategy (e.g., **SQLite** or **PouchDB**).
-*   **Local File System:** Securely store generated PDFs in a dedicated user-selected directory.
+### Vercel environment variables
 
-### B. Localization & Formatting
-*   **Currency:** Fixed to GBP (£) with `en-GB` formatting standards (two decimal places).
-*   **Date Standards:** `dd/MM/yyyy` format.
+Set these in the Vercel project (**Settings → Environment Variables**):
 
-## 5. UI/UX Design Principles
-*   **Professional, Dark-Themed UI:** Low-light palette (Navy/Slate) to reduce eye strain during finance tasks.
-*   **Responsiveness:** Fluid layout that scales from small desktop windows to full-screen monitors.
-*   **Feedback Loops:** Visual cues for save status, PDF generation success, and payment recording.
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `ACCESS_PASSWORD` | Yes | Initial web access password (server only). |
+| `SESSION_SECRET` | Yes | Random string, **at least 16 characters**, used to sign session cookies. |
 
-## 6. Development Roadmap
+Optional but recommended for **changing the password in the app**:
 
-### Phase 1: Foundation
-*   Setup Electron/React/TypeScript environment.
-*   Implement local SQLite database layer (replace the current API SDK).
-*   Establish state management (Redux or Zustand) to mirror the existing UI.
+1. In Vercel: **Storage → Create KV database** and connect it to the project.
+2. After KV is linked, use **Settings → Web access** in the app to set a new password.
 
-### Phase 2: Core Engine
-*   Build the Invoice generation logic (JS-to-PDF).
-*   Implement company settings storage (JSON config).
-*   Build the CRUD operations for Invoices, Clients, and Payments.
+### Deploy
 
-### Phase 3: Reporting & Polish
-*   Implement Recharts or similar for the Dashboard analytics.
-*   Implement PDF branding engine (Logo/Color injection).
-*   Final styling and UK-specific polish (VAT/Currency validation).
+```bash
+npm run build:pwa:vercel
+vercel deploy --prod
+```
 
----
+Or connect the GitHub repo to Vercel; `vercel.json` runs `npm run build:pwa:vercel` on each deploy.
 
-### Comparison for your Dev (Cloud vs. Electron)
-| Feature | Original (Current) | Target (Electron) |
-| :--- | :--- | :--- |
-| **Backend** | Base44 (Cloud) | Local SQLite |
-| **Auth** | Managed by Platform | Not required / Local Profile |
-| **PDF Storage** | Cloud Storage | Local `/documents/invoices/` |
-| **Deployment** | Web-hosted | Desktop Installer (.dmg / .exe) |
+### Local PWA preview (no server auth)
 
-*Note: Since the existing app relies heavily on `base44` SDK calls for data operations, your dev will need to create a **Data Access Layer** abstraction that switches from API calls to local database queries.*
+```bash
+npm run build:pwa
+npm run preview:pwa
+```
+
+Hosted auth is **off** unless `VITE_HOSTED_AUTH=true` (Vercel build only).
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Electron + Vite dev server |
+| `npm run build:pwa` | Static PWA build |
+| `npm run build:pwa:vercel` | PWA + hosted auth UI for Vercel |
+| `npm run preview:pwa` | Preview PWA locally |
+| `npm run typecheck` | TypeScript check |
+
+## Data
+
+- **Electron:** JSON store under the app user data directory; PDFs in Documents/MyFinance (or a folder you choose in Settings).
+- **Web PWA:** `localStorage` via the web platform API (per device; not synced with desktop automatically).
+
+## License
+
+MIT
