@@ -1581,3 +1581,48 @@ table.data tr:hover td {
   color: var(--text);
 }
 
+.pwa-install-lead {
+  margin: 0 0 16px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.pwa-install-steps {
+  margin: 0 0 20px;
+  padding-left: 1.25rem;
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.pwa-install-steps li + li {
+  margin-top: 10px;
+}
+
+.pwa-install-icon {
+  display: inline-block;
+  font-size: 1.1em;
+  vertical-align: middle;
+}
+
+.pwa-install-url {
+  margin-top: 8px;
+}
+
+.pwa-install-url-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.pwa-install-url-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.pwa-install-note {
+  margin: 16px 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+
