@@ -1495,8 +1495,15 @@ table.data tr:hover td {
   background: var(--bg);
 }
 
+.pwa-auth-layout {
+  width: min(100%, 420px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .pwa-auth-card {
-  width: min(100%, 380px);
+  width: 100%;
   padding: 28px 24px;
   border-radius: 16px;
   border: 1px solid var(--border);
@@ -1624,5 +1631,36 @@ table.data tr:hover td {
   font-size: 12px;
   color: var(--text-dim);
   line-height: 1.45;
+}
+
+.pwa-install-login {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  text-align: left;
+}
+
+.pwa-install-login-toggle {
+  width: 100%;
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.pwa-install-login-body {
+  margin-top: 12px;
+}
+
+.pwa-install-login-body .pwa-install-steps {
+  margin-bottom: 0;
+  font-size: 13px;
 }
 

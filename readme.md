@@ -63,7 +63,7 @@ npm run preview:pwa
 
 Hosted auth is **off** for local preview if you set `VITE_HOSTED_AUTH=false` when building. On Vercel it is on by default.
 
-**Install on iPad:** **Settings → Install app** — step-by-step for Safari **Add to Home Screen** (iOS does not allow one-tap install from the website).
+**Install on iPad:** On the **sign-in screen**, expand **Install app on iPad / phone** (Safari → Share → Add to Home Screen).
 
 ## Scripts
 

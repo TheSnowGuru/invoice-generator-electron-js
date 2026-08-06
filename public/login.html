@@ -20,15 +20,21 @@
       body {
         margin: 0;
         min-height: 100dvh;
-        display: grid;
-        place-items: center;
         font-family: system-ui, -apple-system, Segoe UI, sans-serif;
         background: var(--bg);
         color: var(--text);
         padding: 24px;
       }
+      .layout {
+        max-width: 420px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-height: calc(100dvh - 48px);
+        justify-content: center;
+      }
       .card {
-        width: min(100%, 380px);
         padding: 28px 24px;
         border-radius: 16px;
         border: 1px solid var(--border);
@@ -59,7 +65,7 @@
         color: var(--text);
         font-size: 1rem;
       }
-      button {
+      button[type='submit'] {
         width: 100%;
         margin-top: 14px;
         padding: 10px 14px;
@@ -71,7 +77,7 @@
         font-size: 1rem;
         cursor: pointer;
       }
-      button:disabled {
+      button[type='submit']:disabled {
         opacity: 0.6;
         cursor: wait;
       }
@@ -81,20 +87,55 @@
         margin: 10px 0 0;
         min-height: 1.2em;
       }
+      .install {
+        padding: 16px 18px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: rgba(15, 23, 42, 0.45);
+        text-align: left;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+      .install h2 {
+        margin: 0 0 10px;
+        font-size: 0.95rem;
+        color: var(--text);
+      }
+      .install ol {
+        margin: 0;
+        padding-left: 1.2rem;
+        line-height: 1.5;
+      }
+      .install li + li {
+        margin-top: 8px;
+      }
     </style>
   </head>
   <body>
-    <div class="card">
-      <h1>MyFinance</h1>
-      <p>Sign in to open the web app.</p>
-      <form id="login">
-        <label for="password">Password</label>
-        <input id="password" name="password" type="password" autocomplete="current-password" required autofocus />
-        <p class="error" id="error" aria-live="polite"></p>
-        <button type="submit" id="submit">Sign in</button>
-      </form>
+    <div class="layout">
+      <div class="card">
+        <h1>MyFinance</h1>
+        <p>Sign in to open the web app.</p>
+        <form id="login">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required autofocus />
+          <p class="error" id="error" aria-live="polite"></p>
+          <button type="submit" id="submit">Sign in</button>
+        </form>
+      </div>
+      <div class="install" id="install-hint">
+        <h2>Install on iPad / phone</h2>
+        <ol>
+          <li>Use <strong>Safari</strong> on iPad or iPhone.</li>
+          <li>Tap <strong>Share</strong> → <strong>Add to Home Screen</strong> → <strong>Add</strong>.</li>
+          <li>Open <strong>MyFinance</strong> from your Home Screen (full-screen app).</li>
+        </ol>
+      </div>
     </div>
     <script>
+      if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+        document.getElementById('install-hint')?.remove();
+      }
       const form = document.getElementById('login');
       const errorEl = document.getElementById('error');
       const submit = document.getElementById('submit');

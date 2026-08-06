@@ -4,11 +4,9 @@ import { getMyFinanceApi } from '../platform/api';
 import type { CompanySettings } from '../types';
 import { ACCENT_PRESETS, CURRENCIES } from '../types';
 import { HostedAccessSettings } from '../components/HostedAccessSettings';
-import { PwaInstallSettings } from '../components/PwaInstallSettings';
 import { detectHostedAuth, isHostedAuth } from '../lib/hosted-auth';
-import { isPwaInstallAvailable } from '../lib/pwa-install';
 
-type SettingsTab = 'company' | 'design' | 'documents' | 'bank' | 'access' | 'install';
+type SettingsTab = 'company' | 'design' | 'documents' | 'bank' | 'access';
 
 const BASE_TABS: { id: SettingsTab; label: string }[] = [
   { id: 'company', label: 'Company' },
@@ -34,9 +32,6 @@ export default function SettingsPage() {
 
   const tabs = [
     ...BASE_TABS,
-    ...(isPwaInstallAvailable()
-      ? [{ id: 'install' as const, label: 'Install app' }]
-      : []),
     ...(hostedAuth ? [{ id: 'access' as const, label: 'Web access' }] : []),
   ];
 
@@ -428,15 +423,11 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {tab === 'install' && isPwaInstallAvailable() && (
-        <PwaInstallSettings onToast={setToast} />
-      )}
-
       {tab === 'access' && hostedAuth && (
         <HostedAccessSettings onToast={setToast} />
       )}
 
-      {tab !== 'access' && tab !== 'install' && (
+      {tab !== 'access' && (
       <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
         <button className="btn btn-primary" onClick={save}>
           Save settings
