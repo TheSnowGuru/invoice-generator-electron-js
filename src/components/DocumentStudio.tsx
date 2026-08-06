@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { getMyFinanceApi } from '../platform/api';
 import { useAppStore } from '../store';
 import LineItemsEditor from './LineItemsEditor';
 import {
@@ -179,7 +180,7 @@ export default function DocumentStudio({ session, onClose }: Props) {
           updatedAt: new Date().toISOString(),
         };
         await saveInvoice(saved);
-        const path = await window.flowstate.generateInvoicePdf(saved.id, docKind);
+        const path = await getMyFinanceApi().generateInvoicePdf(saved.id, docKind);
         setSavedPath(path);
         setToast(`${INVOICE_KIND_LABELS[docKind]} saved`);
       } else if (session.kind === 'offer' && offerDraft) {
@@ -188,7 +189,7 @@ export default function DocumentStudio({ session, onClose }: Props) {
           updatedAt: new Date().toISOString(),
         };
         await saveOffer(saved);
-        const path = await window.flowstate.generateOfferPdf(saved.id, offerStyle);
+        const path = await getMyFinanceApi().generateOfferPdf(saved.id, offerStyle);
         setSavedPath(path);
         setToast(offerStyle === 'pricing' ? 'Pricing offer PDF saved' : 'Quotation PDF saved');
       }
@@ -202,7 +203,7 @@ export default function DocumentStudio({ session, onClose }: Props) {
   const shareApple = async () => {
     if (!savedPath) return;
     try {
-      const file = await window.flowstate.readFileForShare(savedPath);
+      const file = await getMyFinanceApi().readFileForShare(savedPath);
       const blob = new Blob([new Uint8Array(file.data)], { type: file.mime });
       const shareFile = new File([blob], file.name, { type: file.mime });
       if (navigator.canShare?.({ files: [shareFile] })) {
@@ -214,12 +215,12 @@ export default function DocumentStudio({ session, onClose }: Props) {
         setToast('Shared');
         return;
       }
-      const ok = await window.flowstate.shareMac(savedPath, shareMessage.body);
+      const ok = await getMyFinanceApi().shareMac(savedPath, shareMessage.body);
       setToast(ok ? 'Share sheet opened' : 'Shown in Finder — use Share from there');
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') return;
       try {
-        await window.flowstate.shareMac(savedPath, shareMessage.body);
+        await getMyFinanceApi().shareMac(savedPath, shareMessage.body);
         setToast('Share sheet opened');
       } catch (err) {
         setToast(err instanceof Error ? err.message : 'Share failed');
@@ -230,7 +231,7 @@ export default function DocumentStudio({ session, onClose }: Props) {
   const shareEmail = async () => {
     if (!savedPath) return;
     try {
-      const ok = await window.flowstate.shareEmail(
+      const ok = await getMyFinanceApi().shareEmail(
         savedPath,
         shareMessage.subject,
         shareMessage.body
@@ -248,7 +249,7 @@ export default function DocumentStudio({ session, onClose }: Props) {
   const shareWhatsApp = async () => {
     if (!savedPath) return;
     try {
-      await window.flowstate.shareWhatsApp(savedPath, shareMessage.body);
+      await getMyFinanceApi().shareWhatsApp(savedPath, shareMessage.body);
       setToast('WhatsApp opened with your message — press \u2318V to attach the PDF');
     } catch (e) {
       setToast(e instanceof Error ? e.message : 'WhatsApp share failed');
@@ -302,13 +303,13 @@ export default function DocumentStudio({ session, onClose }: Props) {
               </button>
               <button
                 className="btn btn-sm"
-                onClick={() => window.flowstate.openPdf(savedPath)}
+                onClick={() => getMyFinanceApi().openPdf(savedPath!)}
               >
                 Open
               </button>
               <button
                 className="btn btn-sm"
-                onClick={() => window.flowstate.revealPdf(savedPath)}
+                onClick={() => getMyFinanceApi().revealPdf(savedPath!)}
               >
                 Show in Finder
               </button>

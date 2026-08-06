@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '../store';
+import { getMyFinanceApi } from '../platform/api';
 import type { CompanySettings } from '../types';
 import { ACCENT_PRESETS } from '../types';
 
@@ -27,7 +28,7 @@ export default function SettingsPage() {
   }, [company]);
 
   useEffect(() => {
-    window.flowstate.getInvoicesRoot().then(setDefaultInvoicesRoot).catch(() => {});
+    getMyFinanceApi().getInvoicesRoot().then(setDefaultInvoicesRoot).catch(() => {});
   }, [company.pdfOutputDir]);
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export default function SettingsPage() {
         setLogoUrl(null);
         return;
       }
-      const url = await window.flowstate.readDataUrl(form.logoPath);
+      const url = await getMyFinanceApi().readDataUrl(form.logoPath);
       if (!cancelled) setLogoUrl(url);
     })();
     return () => {
@@ -55,12 +56,12 @@ export default function SettingsPage() {
   };
 
   const pickLogo = async () => {
-    const path = await window.flowstate.pickLogo();
+    const path = await getMyFinanceApi().pickLogo();
     if (path) set('logoPath', path);
   };
 
   const pickInvoicesFolder = async () => {
-    const path = await window.flowstate.pickInvoicesFolder();
+    const path = await getMyFinanceApi().pickInvoicesFolder();
     if (path) set('pdfOutputDir', path);
   };
 

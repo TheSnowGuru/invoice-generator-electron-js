@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { AppData, Client, CompanySettings, Invoice, Offer, Payment } from './types';
+import { getMyFinanceApi } from './platform/api';
 
 interface AppState extends AppData {
   loaded: boolean;
@@ -67,23 +68,23 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   load: async () => {
-    const data = await window.flowstate.getAll();
+    const data = await getMyFinanceApi().getAll();
     set({ ...data, loaded: true });
   },
 
   refresh: async () => {
-    const data = await window.flowstate.getAll();
+    const data = await getMyFinanceApi().getAll();
     set({ ...data });
   },
 
   saveCompany: async (company) => {
-    const saved = await window.flowstate.saveCompany(company);
+    const saved = await getMyFinanceApi().saveCompany(company);
     set({ company: saved });
     get().setToast('Company settings saved');
   },
 
   saveClient: async (client) => {
-    const saved = await window.flowstate.saveClient(client);
+    const saved = await getMyFinanceApi().saveClient(client);
     const clients = [...get().clients];
     const idx = clients.findIndex((c) => c.id === saved.id);
     if (idx >= 0) clients[idx] = saved;
@@ -93,44 +94,44 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   deleteClient: async (id) => {
-    await window.flowstate.deleteClient(id);
+    await getMyFinanceApi().deleteClient(id);
     set({ clients: get().clients.filter((c) => c.id !== id) });
     get().setToast('Client deleted');
   },
 
   saveInvoice: async (invoice) => {
-    const saved = await window.flowstate.saveInvoice(invoice);
+    const saved = await getMyFinanceApi().saveInvoice(invoice);
     await get().refresh();
     void saved;
     get().setToast('Invoice saved');
   },
 
   deleteInvoice: async (id) => {
-    await window.flowstate.deleteInvoice(id);
+    await getMyFinanceApi().deleteInvoice(id);
     await get().refresh();
     get().setToast('Invoice deleted');
   },
 
   saveOffer: async (offer) => {
-    await window.flowstate.saveOffer(offer);
+    await getMyFinanceApi().saveOffer(offer);
     await get().refresh();
     get().setToast('Offer saved');
   },
 
   deleteOffer: async (id) => {
-    await window.flowstate.deleteOffer(id);
+    await getMyFinanceApi().deleteOffer(id);
     set({ offers: get().offers.filter((o) => o.id !== id) });
     get().setToast('Offer deleted');
   },
 
   savePayment: async (payment) => {
-    await window.flowstate.savePayment(payment);
+    await getMyFinanceApi().savePayment(payment);
     await get().refresh();
     get().setToast('Payment recorded');
   },
 
   deletePayment: async (id) => {
-    await window.flowstate.deletePayment(id);
+    await getMyFinanceApi().deletePayment(id);
     await get().refresh();
     get().setToast('Payment removed');
   },

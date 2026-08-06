@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getMyFinanceApi } from '../platform/api';
 import type { Client, CompanySettings, Invoice, LineItem, Offer, Payment } from '../types';
 import {
   calcLineNet,
@@ -517,7 +518,7 @@ export function useLogoUrl(logoPath: string) {
         setLogoUrl(null);
         return;
       }
-      const url = await window.flowstate.readDataUrl(logoPath);
+      const url = await getMyFinanceApi().readDataUrl(logoPath);
       if (!cancelled) setLogoUrl(url);
     })();
     return () => {

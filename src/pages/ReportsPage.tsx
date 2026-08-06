@@ -1,4 +1,5 @@
 import { useAppStore } from '../store';
+import { getMyFinanceApi } from '../platform/api';
 
 export default function ReportsPage() {
   const setToast = useAppStore((s) => s.setToast);
@@ -8,7 +9,7 @@ export default function ReportsPage() {
 
   const exportCsv = async (kind: 'invoices' | 'payments' | 'clients') => {
     try {
-      const path = await window.flowstate.exportCsv(kind);
+      const path = await getMyFinanceApi().exportCsv(kind);
       if (path) setToast(`Exported to ${path}`);
     } catch (e) {
       setToast(e instanceof Error ? e.message : 'Export failed');
