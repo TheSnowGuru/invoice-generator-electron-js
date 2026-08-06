@@ -1,15 +1,13 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { COOKIE_NAME, verifySessionToken } from '../_lib/session';
-import { getCookie } from '../_lib/http';
+import { getCookie, jsonResponse } from '../_lib/http';
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', 'GET');
-    return res.status(405).json({ error: 'Method not allowed' });
+export default function handler(request: Request): Response {
+  if (request.method !== 'GET') {
+    return jsonResponse({ error: 'Method not allowed' }, { status: 405, headers: { Allow: 'GET' } });
   }
-  const token = getCookie(req, COOKIE_NAME);
+  const token = getCookie(request, COOKIE_NAME);
   if (!verifySessionToken(token)) {
-    return res.status(401).json({ authenticated: false });
+    return jsonResponse({ authenticated: false }, { status: 401 });
   }
-  return res.status(200).json({ authenticated: true });
+  return jsonResponse({ authenticated: true });
 }

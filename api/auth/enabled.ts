@@ -1,19 +1,18 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { jsonResponse } from '../_lib/http';
 
 /** Public: tells the SPA that server-side auth is available (no secrets). */
-export default function handler(_req: VercelRequest, res: VercelResponse) {
+export default function handler(request: Request): Response {
   try {
-    if (_req.method !== 'GET') {
-      res.setHeader('Allow', 'GET');
-      return res.status(405).json({ error: 'Method not allowed' });
+    if (request.method !== 'GET') {
+      return jsonResponse({ error: 'Method not allowed' }, { status: 405, headers: { Allow: 'GET' } });
     }
-    return res.status(200).json({ enabled: true });
+    return jsonResponse({ enabled: true });
   } catch (e) {
     console.error('enabled handler error', e);
-    return res.status(500).json({
+    return jsonResponse({
       enabled: false,
       error: 'Server error',
       hint: e instanceof Error ? e.message : undefined,
-    });
+    }, { status: 500 });
   }
 }

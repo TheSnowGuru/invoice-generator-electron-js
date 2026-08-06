@@ -181,7 +181,8 @@
               (bad ? ' (' + bad + ')' : '');
           }
         } catch {
-          statusEl.textContent = 'Could not reach /api/auth/status.';
+            statusEl.textContent =
+              'Could not reach /api/auth/status. If you see FUNCTION_INVOCATION_FAILED in the network tab, redeploy after the latest fix (Node 20 API runtime).';
         }
       }
       loadAuthStatus();

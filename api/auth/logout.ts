@@ -1,11 +1,11 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { clearSessionCookieHeader } from '../_lib/session';
+import { jsonResponse } from '../_lib/http';
 
-export default function handler(_req: VercelRequest, res: VercelResponse) {
-  if (_req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: 'Method not allowed' });
+export default function handler(request: Request): Response {
+  if (request.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, { status: 405, headers: { Allow: 'POST' } });
   }
-  res.setHeader('Set-Cookie', clearSessionCookieHeader());
-  return res.status(200).json({ ok: true });
+  return jsonResponse({ ok: true }, {
+    headers: { 'Set-Cookie': clearSessionCookieHeader() },
+  });
 }

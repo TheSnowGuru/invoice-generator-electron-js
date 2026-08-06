@@ -1,25 +1,27 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getAuthConfigStatus } from '../_lib/password';
+import { jsonResponse } from '../_lib/http';
 
 /** Public diagnostics (no secrets). Use when login fails. */
-export default function handler(_req: VercelRequest, res: VercelResponse) {
+export default function handler(request: Request): Response {
   try {
-    if (_req.method !== 'GET') {
-      res.setHeader('Allow', 'GET');
-      return res.status(405).json({ error: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' });
+    if (request.method !== 'GET') {
+      return jsonResponse({ error: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' }, {
+        status: 405,
+        headers: { Allow: 'GET' },
+      });
     }
     const status = getAuthConfigStatus();
-    return res.status(200).json({
+    return jsonResponse({
       ok: status.canAuthenticate,
       ...status,
     });
   } catch (e) {
     console.error('status handler error', e);
-    return res.status(500).json({
+    return jsonResponse({
       ok: false,
       error: 'Could not read auth status',
       code: 'SERVER_ERROR',
       hint: e instanceof Error ? e.message : undefined,
-    });
+    }, { status: 500 });
   }
 }

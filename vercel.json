@@ -3,6 +3,11 @@
   "installCommand": "npm ci --prefer-offline --no-audit --no-fund",
   "outputDirectory": "dist",
   "framework": null,
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "headers": [
     {
       "source": "/api/(.*)",

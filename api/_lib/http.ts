@@ -1,15 +1,26 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-export function readJsonBody<T extends Record<string, unknown>>(req: VercelRequest): T {
-  if (req.body && typeof req.body === 'object') return req.body as T;
-  if (typeof req.body === 'string' && req.body.length > 0) {
-    return JSON.parse(req.body) as T;
+export function jsonResponse(
+  body: unknown,
+  init?: ResponseInit & { headers?: Record<string, string> }
+): Response {
+  const headers = new Headers(init?.headers);
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
   }
-  return {} as T;
+  return new Response(JSON.stringify(body), { ...init, headers });
 }
 
-export function getCookie(req: VercelRequest, name: string): string | undefined {
-  const raw = req.headers.cookie;
+export async function readJsonBody<T extends Record<string, unknown>>(
+  request: Request
+): Promise<T> {
+  try {
+    return (await request.json()) as T;
+  } catch {
+    return {} as T;
+  }
+}
+
+export function getCookie(request: Request, name: string): string | undefined {
+  const raw = request.headers.get('cookie');
   if (!raw) return undefined;
   for (const part of raw.split(';')) {
     const [key, ...rest] = part.trim().split('=');
