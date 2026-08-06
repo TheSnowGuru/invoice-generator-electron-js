@@ -1,34 +1,56 @@
-import { FormEvent, ReactNode, useState } from 'react';
-import { isPwaUnlocked, tryPwaUnlock } from '../lib/pwa-auth';
+import { FormEvent, ReactNode, useEffect, useState } from 'react';
+import { fetchSession, isHostedAuth, login } from '../lib/hosted-auth';
 
 type Props = {
   children: ReactNode;
 };
 
+/** Fallback gate when middleware allows the SPA shell (e.g. local preview). */
 export function PwaAuthGate({ children }: Props) {
-  const [unlocked, setUnlocked] = useState(isPwaUnlocked);
+  const [checked, setChecked] = useState(false);
+  const [authed, setAuthed] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!isHostedAuth()) {
+      setAuthed(true);
+      setChecked(true);
+      return;
+    }
+    void fetchSession().then((ok) => {
+      setAuthed(ok);
+      setChecked(true);
+    });
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
     setBusy(true);
     try {
-      const ok = await tryPwaUnlock(password);
-      if (ok) {
-        setUnlocked(true);
+      const result = await login(password);
+      if (result.ok) {
+        setAuthed(true);
         setPassword('');
       } else {
-        setError('Incorrect password.');
+        setError(result.error || 'Incorrect password.');
       }
     } finally {
       setBusy(false);
     }
   }
 
-  if (unlocked) return <>{children}</>;
+  if (!checked) {
+    return (
+      <div className="pwa-auth-screen">
+        <p className="pwa-auth-lead">Checking session…</p>
+      </div>
+    );
+  }
+
+  if (authed) return <>{children}</>;
 
   return (
     <div className="pwa-auth-screen">
@@ -52,7 +74,7 @@ export function PwaAuthGate({ children }: Props) {
           </label>
           {error ? <p className="pwa-auth-error">{error}</p> : null}
           <button type="submit" className="btn btn-primary" disabled={busy}>
-            {busy ? 'Checking…' : 'Unlock'}
+            {busy ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
       </div>

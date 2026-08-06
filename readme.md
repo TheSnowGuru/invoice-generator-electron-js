@@ -1,88 +1,86 @@
-# MyFinance
+This Product Requirements Document (PRD) outlines the core architecture and functionality of **FlowState Finance**, an invoice and payment tracking application tailored for UK-based small businesses and freelancers.
 
-Offline-first Electron desktop app for UK freelancers and small businesses. Manage clients, invoices, offers, payments, branded PDFs, and CSV reports — all stored locally as JSON. No cloud account required.
+---
 
-## Features
+# Product Requirements Document: FlowState Finance (Electron Desktop)
 
-- **Company branding** — logo, accent colour, VAT/company numbers, UK bank details
-- **Appearance** — dark and light themes (Settings → Appearance)
-- **Invoices** — lifecycle draft → sent → partial → paid → overdue, with configurable VAT (default 20%), GBP, and `dd/MM/yyyy` dates
-- **Document PDFs (Actions ▾)** — tax invoice, proforma invoice, receipt, and payment reminder from each invoice
-- **Offers / quotations** — premium **pricing offer** PDF plus classic quotation; convert accepted offers into draft invoices
-- **Payments** — record partial or full payments; invoice status updates automatically
-- **Clients** — contacts, billing addresses, and revenue totals
-- **Dashboard** — KPIs (invoiced, VAT collected/outstanding, amount due), monthly charts, status pie chart, client leaderboard
-- **PDF engine** — branded A4 invoices & offers (header, line items, VAT breakdown, bank details)
-- **CSV reports** — export invoices, payments, or clients for spreadsheets / accountants
-- **JSON storage** — single local database file; offline-first data sovereignty
+## 1. Executive Summary
+FlowState Finance is a professional-grade desktop application designed for UK businesses to manage the end-to-end invoice lifecycle. It focuses on UK tax compliance (VAT), multi-currency support, and professional branding, providing a localized alternative to global cloud-based accounting platforms.
 
-## Requirements
+## 2. Target Audience
+*   UK-based freelancers, creative consultants, and small limited companies.
+*   Users requiring offline-first data sovereignty (Local Electron app).
+*   Professionals needing high-quality, branded PDF invoices with consistent UK formatting.
 
-- macOS (Apple Silicon arm64 build)
-- Node.js 20+ (for development / building only)
+## 3. Core Functional Requirements
 
-## Install from DMG
+### A. Company Configuration & Branding
+*   **Profile Management:** Store company legal details (Name, Address, Company Number, VAT Number).
+*   **Branding Engine:** 
+    *   Logo upload (PNG/JPG).
+    *   Dynamic accent color selection (custom hex or presets) applied to PDF headers and UI.
+*   **Banking Data:** Secure storage of bank details (Account Name, Sort Code, IBAN, BIC) for automated inclusion in PDF footers.
 
-1. Build (or use an existing build):
+### B. Invoice Management
+*   **Lifecycle:** Draft → Sent → Partially Paid → Paid → Overdue.
+*   **Creation:** 
+    *   Client database integration (lookup existing or create new).
+    *   Dynamic line-item generation (auto-calculating subtotal, VAT @ 20%, and grand total).
+    *   Customizable invoice prefixes and notes.
+*   **PDF Engine:** Professional, branded PDF generation.
+    *   Includes company header, branding colors, "Bill To" section, line-item table, VAT breakdown, and bank details.
+*   **Communication:** Email triggering (using locally managed templates) for invoice delivery and overdue reminders.
 
-```bash
-npm install
-npm run electron:build
-```
+### C. Financial Tracking & Reporting
+*   **Payment Tracking:** Record partial or full payments against specific invoices.
+*   **Dashboard Analytics:**
+    *   **KPI Metrics:** Total Invoiced, VAT Collected (Payable), VAT Outstanding, Monthly Trends.
+    *   **Visualizations:** Monthly invoicing bar charts, revenue distribution by status (pie chart), and client leaderboard (by revenue).
 
-2. Open the installer:
+### D. Client Relationship Management
+*   **Client Profiles:** Manage contacts, billing addresses, and historical invoice links.
+*   **Defaulting:** UK-localized defaults (e.g., London as the default city).
 
-`release/MyFinance-1.0.0-arm64.dmg`
+## 4. Technical Constraints (Electron Architecture)
 
-3. Drag **MyFinance** into **Applications**
-4. First launch (unsigned build): right-click the app → **Open** → **Open**
+### A. Data Persistence
+*   Since the app will run as an Electron desktop instance, you must replace the existing cloud-based backend with a local database strategy (e.g., **SQLite** or **PouchDB**).
+*   **Local File System:** Securely store generated PDFs in a dedicated user-selected directory.
 
-## Run (development)
+### B. Localization & Formatting
+*   **Currency:** Fixed to GBP (£) with `en-GB` formatting standards (two decimal places).
+*   **Date Standards:** `dd/MM/yyyy` format.
 
-```bash
-npm install
-npm run dev
-```
+## 5. UI/UX Design Principles
+*   **Professional, Dark-Themed UI:** Low-light palette (Navy/Slate) to reduce eye strain during finance tasks.
+*   **Responsiveness:** Fluid layout that scales from small desktop windows to full-screen monitors.
+*   **Feedback Loops:** Visual cues for save status, PDF generation success, and payment recording.
 
-Starts Vite and opens the Electron window with hot reload.
+## 6. Development Roadmap
 
-## Scripts
+### Phase 1: Foundation
+*   Setup Electron/React/TypeScript environment.
+*   Implement local SQLite database layer (replace the current API SDK).
+*   Establish state management (Redux or Zustand) to mirror the existing UI.
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Development mode (Vite + Electron) |
-| `npm run build` | Production web/electron bundle only |
-| `npm run electron:build` | Build macOS `.dmg` into `release/` |
-| `npm run typecheck` | TypeScript check (renderer + main) |
+### Phase 2: Core Engine
+*   Build the Invoice generation logic (JS-to-PDF).
+*   Implement company settings storage (JSON config).
+*   Build the CRUD operations for Invoices, Clients, and Payments.
 
-## First-time setup
+### Phase 3: Reporting & Polish
+*   Implement Recharts or similar for the Dashboard analytics.
+*   Implement PDF branding engine (Logo/Color injection).
+*   Final styling and UK-specific polish (VAT/Currency validation).
 
-1. Open **Settings**
-   - Fill in company legal details, VAT, and bank details
-   - Upload a logo and pick an accent colour
-   - Choose **Dark** or **Light** theme
-   - Optionally set a custom invoices folder
-2. Add a **Client**
-3. Create an **Invoice** or **Offer**, then generate a PDF from **Actions**
-4. Optionally record **Payments** and export **Reports** as CSV
+---
 
-## Data locations
+### Comparison for your Dev (Cloud vs. Electron)
+| Feature | Original (Current) | Target (Electron) |
+| :--- | :--- | :--- |
+| **Backend** | Base44 (Cloud) | Local SQLite |
+| **Auth** | Managed by Platform | Not required / Local Profile |
+| **PDF Storage** | Cloud Storage | Local `/documents/invoices/` |
+| **Deployment** | Web-hosted | Desktop Installer (.dmg / .exe) |
 
-| Data | Location |
-|------|----------|
-| JSON database | `~/Library/Application Support/myfinance/data/myfinance-data.json` |
-| Logo assets | `~/Library/Application Support/myfinance/data/assets/` |
-| Invoice PDFs | `~/Documents/MyFinance/invoices/{ClientName}/` (or custom folder in Settings) |
-| Offer PDFs | `~/Documents/MyFinance/offers/{ClientName}/` |
-| CSV exports | Chosen via save dialog |
-| macOS installer | `release/MyFinance-1.0.0-arm64.dmg` |
-
-## Tech stack
-
-Electron · React · TypeScript · Vite · Zustand · PDFKit · Recharts
-
-## Notes
-
-- Currency is fixed to **GBP (£)** with `en-GB` formatting
-- The packaged app is currently **unsigned**; Gatekeeper may require a right-click → Open on first launch
-- Rebuild the DMG after code changes with `npm run electron:build`
+*Note: Since the existing app relies heavily on `base44` SDK calls for data operations, your dev will need to create a **Data Access Layer** abstraction that switches from API calls to local database queries.*

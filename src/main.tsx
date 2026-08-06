@@ -4,7 +4,7 @@ import { HashRouter } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import App from './App';
 import { PwaAuthGate } from './components/PwaAuthGate';
-import { isPwaAuthRequired } from './lib/pwa-auth';
+import { isHostedAuth } from './lib/hosted-auth';
 import './styles.css';
 
 if (Capacitor.isNativePlatform()) {
@@ -23,6 +23,6 @@ const app = (
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {isPwaAuthRequired() ? <PwaAuthGate>{app}</PwaAuthGate> : app}
+    {isHostedAuth() ? <PwaAuthGate>{app}</PwaAuthGate> : app}
   </React.StrictMode>
 );

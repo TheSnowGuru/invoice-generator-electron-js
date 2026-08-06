@@ -43,8 +43,8 @@ export default defineConfig({
   ],
   define: {
     'import.meta.env.VITE_PWA': JSON.stringify('true'),
-    'import.meta.env.VITE_PWA_PASSWORD_HASH': JSON.stringify(
-      process.env.VITE_PWA_PASSWORD_HASH || ''
+    'import.meta.env.VITE_HOSTED_AUTH': JSON.stringify(
+      process.env.VITE_HOSTED_AUTH === 'true' ? 'true' : 'false'
     ),
   },
   resolve: {

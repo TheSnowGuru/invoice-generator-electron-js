@@ -3,10 +3,12 @@ import { useAppStore } from '../store';
 import { getMyFinanceApi } from '../platform/api';
 import type { CompanySettings } from '../types';
 import { ACCENT_PRESETS, CURRENCIES } from '../types';
+import { HostedAccessSettings } from '../components/HostedAccessSettings';
+import { isHostedAuth } from '../lib/hosted-auth';
 
-type SettingsTab = 'company' | 'design' | 'documents' | 'bank';
+type SettingsTab = 'company' | 'design' | 'documents' | 'bank' | 'access';
 
-const TABS: { id: SettingsTab; label: string }[] = [
+const BASE_TABS: { id: SettingsTab; label: string }[] = [
   { id: 'company', label: 'Company' },
   { id: 'design', label: 'Design' },
   { id: 'documents', label: 'Documents' },
@@ -22,6 +24,10 @@ export default function SettingsPage() {
   const [form, setForm] = useState<CompanySettings>(company);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [defaultInvoicesRoot, setDefaultInvoicesRoot] = useState('');
+
+  const tabs = isHostedAuth()
+    ? [...BASE_TABS, { id: 'access' as const, label: 'Web access' }]
+    : BASE_TABS;
 
   useEffect(() => {
     setForm(company);
@@ -76,7 +82,7 @@ export default function SettingsPage() {
   return (
     <div className="settings-page">
       <div className="settings-tabs" role="tablist">
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
@@ -409,6 +415,10 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {tab === 'access' && isHostedAuth() && (
+        <HostedAccessSettings onToast={setToast} />
       )}
 
       <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
