@@ -1,5 +1,5 @@
 import { FormEvent, ReactNode, useEffect, useState } from 'react';
-import { fetchSession, isHostedAuth, login } from '../lib/hosted-auth';
+import { fetchSession, detectHostedAuth, login } from '../lib/hosted-auth';
 
 type Props = {
   children: ReactNode;
@@ -14,15 +14,24 @@ export function PwaAuthGate({ children }: Props) {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!isHostedAuth()) {
-      setAuthed(true);
-      setChecked(true);
-      return;
-    }
-    void fetchSession().then((ok) => {
-      setAuthed(ok);
-      setChecked(true);
-    });
+    let cancelled = false;
+    void (async () => {
+      const hosted = await detectHostedAuth();
+      if (cancelled) return;
+      if (!hosted) {
+        setAuthed(true);
+        setChecked(true);
+        return;
+      }
+      const ok = await fetchSession();
+      if (!cancelled) {
+        setAuthed(ok);
+        setChecked(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function onSubmit(e: FormEvent) {

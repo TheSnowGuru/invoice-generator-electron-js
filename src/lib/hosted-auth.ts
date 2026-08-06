@@ -1,7 +1,33 @@
 /** Client helpers for Vercel-hosted auth (no secrets in the browser bundle). */
 
+let hostedAuthDetected: boolean | null = null;
+
 export function isHostedAuth(): boolean {
-  return import.meta.env.VITE_HOSTED_AUTH === 'true';
+  if (import.meta.env.VITE_HOSTED_AUTH === 'true') return true;
+  if (hostedAuthDetected === true) return true;
+  return false;
+}
+
+/** Detect hosted auth API (Vercel). Caches result for the session. */
+export async function detectHostedAuth(): Promise<boolean> {
+  if (import.meta.env.VITE_HOSTED_AUTH === 'true') {
+    hostedAuthDetected = true;
+    return true;
+  }
+  if (hostedAuthDetected !== null) return hostedAuthDetected;
+
+  try {
+    const res = await fetch('/api/auth/enabled', { credentials: 'include' });
+    if (res.ok) {
+      const data = (await res.json()) as { enabled?: boolean };
+      hostedAuthDetected = Boolean(data.enabled);
+      return hostedAuthDetected;
+    }
+  } catch {
+    // Not on Vercel / no API
+  }
+  hostedAuthDetected = false;
+  return false;
 }
 
 export async function fetchSession(): Promise<boolean> {

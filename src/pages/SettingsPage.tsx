@@ -4,7 +4,7 @@ import { getMyFinanceApi } from '../platform/api';
 import type { CompanySettings } from '../types';
 import { ACCENT_PRESETS, CURRENCIES } from '../types';
 import { HostedAccessSettings } from '../components/HostedAccessSettings';
-import { isHostedAuth } from '../lib/hosted-auth';
+import { detectHostedAuth, isHostedAuth } from '../lib/hosted-auth';
 
 type SettingsTab = 'company' | 'design' | 'documents' | 'bank' | 'access';
 
@@ -24,8 +24,13 @@ export default function SettingsPage() {
   const [form, setForm] = useState<CompanySettings>(company);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [defaultInvoicesRoot, setDefaultInvoicesRoot] = useState('');
+  const [hostedAuth, setHostedAuth] = useState(isHostedAuth);
 
-  const tabs = isHostedAuth()
+  useEffect(() => {
+    void detectHostedAuth().then(setHostedAuth);
+  }, []);
+
+  const tabs = hostedAuth
     ? [...BASE_TABS, { id: 'access' as const, label: 'Web access' }]
     : BASE_TABS;
 
@@ -417,7 +422,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {tab === 'access' && isHostedAuth() && (
+      {tab === 'access' && hostedAuth && (
         <HostedAccessSettings onToast={setToast} />
       )}
 

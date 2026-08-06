@@ -4,6 +4,7 @@ import { getSessionCookie, verifySessionToken } from './lib/session-edge';
 function isPublicPath(pathname: string): boolean {
   if (pathname === '/login.html') return true;
   if (pathname === '/api/auth/login') return true;
+  if (pathname === '/api/auth/enabled') return true;
   if (pathname.startsWith('/assets/')) return true;
   if (pathname === '/manifest.webmanifest' || pathname === '/sw.js' || pathname.startsWith('/workbox')) {
     return true;

@@ -61,7 +61,9 @@ npm run build:pwa
 npm run preview:pwa
 ```
 
-Hosted auth is **off** unless `VITE_HOSTED_AUTH=true` (Vercel build only).
+Hosted auth is **off** for local preview if you set `VITE_HOSTED_AUTH=false` when building. On Vercel it is on by default.
+
+**Web access** (change password): **Settings → Web access** — only on the **Vercel / PWA** app, not in the Electron desktop app.
 
 ## Scripts
 
