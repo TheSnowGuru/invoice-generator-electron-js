@@ -1,6 +1,6 @@
-import { getAuthConfigStatus, verifyLoginPassword } from '../_lib/password';
-import { createSessionToken, sessionCookieHeader } from '../_lib/session';
-import { jsonResponse, readJsonBody } from '../_lib/http';
+import { getAuthConfigStatus, verifyLoginPassword } from '../_lib/password.js';
+import { createSessionToken, sessionCookieHeader } from '../_lib/session.js';
+import { jsonResponse, readJsonBody } from '../_lib/http.js';
 
 export default async function handler(request: Request): Promise<Response> {
   try {

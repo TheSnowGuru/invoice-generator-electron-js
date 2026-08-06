@@ -1,6 +1,6 @@
-import { hashPassword, updatePasswordHash, verifyLoginPassword } from '../_lib/password';
-import { COOKIE_NAME, verifySessionToken } from '../_lib/session';
-import { getCookie, jsonResponse, readJsonBody } from '../_lib/http';
+import { hashPassword, updatePasswordHash, verifyLoginPassword } from '../_lib/password.js';
+import { COOKIE_NAME, verifySessionToken } from '../_lib/session.js';
+import { getCookie, jsonResponse, readJsonBody } from '../_lib/http.js';
 
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== 'POST') {

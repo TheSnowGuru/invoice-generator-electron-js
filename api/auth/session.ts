@@ -1,5 +1,5 @@
-import { COOKIE_NAME, verifySessionToken } from '../_lib/session';
-import { getCookie, jsonResponse } from '../_lib/http';
+import { COOKIE_NAME, verifySessionToken } from '../_lib/session.js';
+import { getCookie, jsonResponse } from '../_lib/http.js';
 
 export default function handler(request: Request): Response {
   if (request.method !== 'GET') {

@@ -1,5 +1,5 @@
-import { getAuthConfigStatus } from '../_lib/password';
-import { jsonResponse } from '../_lib/http';
+import { getAuthConfigStatus } from '../_lib/password.js';
+import { jsonResponse } from '../_lib/http.js';
 
 /** Public diagnostics (no secrets). Use when login fails. */
 export default function handler(request: Request): Response {

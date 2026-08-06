@@ -1,5 +1,5 @@
-import { clearSessionCookieHeader } from '../_lib/session';
-import { jsonResponse } from '../_lib/http';
+import { clearSessionCookieHeader } from '../_lib/session.js';
+import { jsonResponse } from '../_lib/http.js';
 
 export default function handler(request: Request): Response {
   if (request.method !== 'POST') {
