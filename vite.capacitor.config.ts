@@ -12,6 +12,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      'virtual:pwa-register': path.resolve(
+        __dirname,
+        'src/shims/pwa-register-stub.ts'
+      ),
     },
   },
   build: {
