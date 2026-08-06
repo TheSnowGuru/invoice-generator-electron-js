@@ -49,6 +49,7 @@ const empty: AppData = {
     nextOfferNumber: 1001,
     defaultNotes: '',
     defaultVatRate: 0.2,
+    defaultCurrency: 'GBP',
     pdfOutputDir: '',
   },
   clients: [],

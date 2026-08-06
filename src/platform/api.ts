@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import type { MyFinanceApi } from './myfinance-api';
 import { createCapacitorApi } from './capacitor-api';
+import { createWebApi } from './web-api';
 
 let cached: MyFinanceApi | null = null;
 
@@ -21,5 +22,6 @@ export function getMyFinanceApi(): MyFinanceApi {
     return cached;
   }
 
-  throw new Error('MyFinance API is not available in this environment.');
+  cached = createWebApi();
+  return cached;
 }

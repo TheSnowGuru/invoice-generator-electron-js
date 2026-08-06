@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAppStore } from '../store';
 import { getMyFinanceApi } from '../platform/api';
 import type { CompanySettings } from '../types';
-import { ACCENT_PRESETS } from '../types';
+import { ACCENT_PRESETS, CURRENCIES } from '../types';
 
 type SettingsTab = 'company' | 'design' | 'documents' | 'bank';
 
@@ -267,6 +267,19 @@ export default function SettingsPage() {
                   value={form.nextOfferNumber}
                   onChange={(e) => set('nextOfferNumber', Number(e.target.value))}
                 />
+              </div>
+              <div className="field">
+                <label>Default currency</label>
+                <select
+                  value={form.defaultCurrency ?? 'GBP'}
+                  onChange={(e) => set('defaultCurrency', e.target.value as CompanySettings['defaultCurrency'])}
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="field">
                 <label>Default VAT rate (%)</label>

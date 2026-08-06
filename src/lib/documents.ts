@@ -12,7 +12,9 @@ export function newInvoiceDraft(company: CompanySettings, client?: Client): Invo
     status: 'draft',
     issueDate: todayIso(),
     dueDate: addDaysIso(30),
-    currency: 'GBP',
+    currency: company.defaultCurrency ?? 'GBP',
+    roundTotals: false,
+    vatMode: 'with',
     items: [
       {
         id: newId(),
@@ -71,7 +73,7 @@ export function newOfferDraft(company: CompanySettings, client?: Client): Offer 
     status: 'draft',
     issueDate: todayIso(),
     validUntil: addDaysIso(14),
-    currency: 'GBP',
+    currency: company.defaultCurrency ?? 'GBP',
     items: [
       {
         id: newId(),

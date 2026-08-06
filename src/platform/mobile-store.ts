@@ -29,6 +29,7 @@ const DEFAULT_COMPANY: CompanySettings = {
   nextOfferNumber: 1001,
   defaultNotes: 'Thank you for your business.',
   defaultVatRate: 0.2,
+  defaultCurrency: 'GBP',
   pdfOutputDir: '',
 };
 

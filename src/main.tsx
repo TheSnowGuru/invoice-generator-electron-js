@@ -9,6 +9,10 @@ if (Capacitor.isNativePlatform()) {
   document.documentElement.classList.add('capacitor-native');
 }
 
+if (import.meta.env.VITE_PWA === 'true') {
+  void import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }));
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <HashRouter>

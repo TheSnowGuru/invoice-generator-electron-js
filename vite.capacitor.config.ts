@@ -4,6 +4,9 @@ import path from 'path';
 
 /** Web build for Capacitor (iOS / iPad) — no Electron main process. */
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_PWA': JSON.stringify('false'),
+  },
   plugins: [react()],
   base: './',
   resolve: {

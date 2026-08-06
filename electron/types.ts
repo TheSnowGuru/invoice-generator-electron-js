@@ -9,6 +9,9 @@ export interface LineItem {
   vatRate: number; // 0.20 = 20%
 }
 
+export type CurrencyCode = 'GBP' | 'EUR' | 'USD' | 'ILS' | 'CHF' | 'AUD' | 'CAD' | 'JPY';
+export type VatMode = 'with' | 'without';
+
 export interface CompanySettings {
   name: string;
   addressLine1: string;
@@ -38,6 +41,7 @@ export interface CompanySettings {
   nextOfferNumber: number;
   defaultNotes: string;
   defaultVatRate: number;
+  defaultCurrency: CurrencyCode;
   pdfOutputDir: string;
 }
 
@@ -65,7 +69,9 @@ export interface Invoice {
   status: InvoiceStatus;
   issueDate: string;
   dueDate: string;
-  currency: 'GBP';
+  currency: CurrencyCode;
+  roundTotals?: boolean;
+  vatMode?: VatMode;
   items: LineItem[];
   notes: string;
   accentColor?: string;
@@ -80,7 +86,7 @@ export interface Offer {
   status: OfferStatus;
   issueDate: string;
   validUntil: string;
-  currency: 'GBP';
+  currency: CurrencyCode;
   items: LineItem[];
   notes: string;
   terms: string;
@@ -137,6 +143,7 @@ export const DEFAULT_COMPANY: CompanySettings = {
   nextOfferNumber: 1001,
   defaultNotes: 'Payment due within 30 days. Thank you for your business.',
   defaultVatRate: 0.2,
+  defaultCurrency: 'GBP',
   pdfOutputDir: '',
 };
 
@@ -159,15 +166,37 @@ export function calcTotals(items: LineItem[]) {
   return { subtotal, vat, total };
 }
 
+export function invoiceTotals(items: LineItem[], roundTotals = false) {
+  const { subtotal, vat, total } = calcTotals(items);
+  if (!roundTotals) {
+    return { subtotal, vat, total, displayTotal: total, roundingAdjustment: 0 };
+  }
+  const displayTotal = Math.round(total);
+  return {
+    subtotal,
+    vat,
+    total,
+    displayTotal,
+    roundingAdjustment: round2(displayTotal - total),
+  };
+}
+
 export function round2(n: number): number {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }
 
-export function formatGbp(n: number): string {
+export function formatMoney(n: number, currency: CurrencyCode = 'GBP'): string {
+  const digits = currency === 'JPY' ? 0 : 2;
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',
-    currency: 'GBP',
+    currency,
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
   }).format(n);
+}
+
+export function formatGbp(n: number): string {
+  return formatMoney(n, 'GBP');
 }
 
 export function formatDateUk(iso: string): string {

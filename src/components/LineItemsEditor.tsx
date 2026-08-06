@@ -1,14 +1,23 @@
-import type { LineItem } from '../types';
-import { calcTotals, formatGbp } from '../types';
+import type { CurrencyCode, LineItem } from '../types';
+import { calcTotals, formatMoney, invoiceTotals } from '../types';
 
 interface Props {
   items: LineItem[];
   defaultVatRate: number;
+  currency?: CurrencyCode;
+  vatDisabled?: boolean;
   onChange: (items: LineItem[]) => void;
   vatHint?: string | null;
 }
 
-export default function LineItemsEditor({ items, defaultVatRate, onChange, vatHint }: Props) {
+export default function LineItemsEditor({
+  items,
+  defaultVatRate,
+  currency = 'GBP',
+  vatDisabled = false,
+  onChange,
+  vatHint,
+}: Props) {
   const totals = calcTotals(items);
 
   const update = (id: string, patch: Partial<LineItem>) => {
@@ -57,7 +66,7 @@ export default function LineItemsEditor({ items, defaultVatRate, onChange, vatHi
               />
             </div>
             <div className="field">
-              <label>Unit £</label>
+              <label>Unit</label>
               <input
                 type="number"
                 min={0}
@@ -66,21 +75,23 @@ export default function LineItemsEditor({ items, defaultVatRate, onChange, vatHi
                 onChange={(e) => update(item.id, { unitPrice: Number(e.target.value) })}
               />
             </div>
-            <div className="field">
-              <label>VAT %</label>
-              <input
-                type="number"
-                min={0}
-                max={100}
-                step={1}
-                value={Number((item.vatRate * 100).toFixed(2))}
-                onChange={(e) => {
-                  const pct = Number(e.target.value);
-                  const safe = Number.isFinite(pct) ? Math.min(100, Math.max(0, pct)) : 0;
-                  update(item.id, { vatRate: safe / 100 });
-                }}
-              />
-            </div>
+            {!vatDisabled && (
+              <div className="field">
+                <label>VAT %</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={Number((item.vatRate * 100).toFixed(2))}
+                  onChange={(e) => {
+                    const pct = Number(e.target.value);
+                    const safe = Number.isFinite(pct) ? Math.min(100, Math.max(0, pct)) : 0;
+                    update(item.id, { vatRate: safe / 100 });
+                  }}
+                />
+              </div>
+            )}
             <button type="button" className="btn btn-ghost btn-sm" onClick={() => remove(item.id)}>
               Remove
             </button>
@@ -95,15 +106,15 @@ export default function LineItemsEditor({ items, defaultVatRate, onChange, vatHi
       <div className="totals-box">
         <div className="totals-row">
           <span>Subtotal</span>
-          <span>{formatGbp(totals.subtotal)}</span>
+          <span>{formatMoney(totals.subtotal, currency)}</span>
         </div>
         <div className="totals-row">
           <span>VAT</span>
-          <span>{formatGbp(totals.vat)}</span>
+          <span>{formatMoney(totals.vat, currency)}</span>
         </div>
         <div className="totals-row grand">
           <span>Total</span>
-          <span>{formatGbp(totals.total)}</span>
+          <span>{formatMoney(totals.total, currency)}</span>
         </div>
       </div>
     </div>

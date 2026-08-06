@@ -7,9 +7,12 @@ import {
   calcTotals,
   formatDateUk,
   formatGbp,
+  formatMoney,
+  invoiceTotals,
   paidAmount,
   round2,
 } from '../types';
+import type { CurrencyCode } from '../types';
 
 export type InvoiceDocKind = 'invoice' | 'proforma' | 'receipt' | 'reminder';
 export type OfferDocStyle = 'pricing' | 'quotation';
@@ -57,22 +60,26 @@ function ItemsTable({ items, accent }: { items: LineItem[]; accent: string }) {
 function TotalsBlock({
   items,
   accent,
+  currency = 'GBP',
+  roundTotals = false,
   extras = [],
 }: {
   items: LineItem[];
   accent: string;
+  currency?: CurrencyCode;
+  roundTotals?: boolean;
   extras?: Array<{ label: string; value: string }>;
 }) {
-  const { subtotal, vat, total } = calcTotals(items);
+  const { subtotal, vat, displayTotal, roundingAdjustment } = invoiceTotals(items, roundTotals);
   return (
     <div className="dp-totals">
       <div className="dp-totals-row">
         <span>Subtotal</span>
-        <strong>{formatGbp(subtotal)}</strong>
+        <strong>{formatMoney(subtotal, currency)}</strong>
       </div>
       <div className="dp-totals-row">
         <span>VAT</span>
-        <strong>{formatGbp(vat)}</strong>
+        <strong>{formatMoney(vat, currency)}</strong>
       </div>
       {extras.map((e) => (
         <div className="dp-totals-row" key={e.label}>
@@ -80,9 +87,15 @@ function TotalsBlock({
           <strong>{e.value}</strong>
         </div>
       ))}
+      {roundTotals && roundingAdjustment !== 0 && (
+        <div className="dp-totals-row">
+          <span>Rounding</span>
+          <strong>{formatMoney(roundingAdjustment, currency)}</strong>
+        </div>
+      )}
       <div className="dp-totals-grand" style={{ background: accent }}>
-        <span>Total (GBP)</span>
-        <strong>{formatGbp(total)}</strong>
+        <span>Total ({currency})</span>
+        <strong>{formatMoney(displayTotal, currency)}</strong>
       </div>
     </div>
   );
@@ -151,8 +164,8 @@ export function InvoiceDocumentPreview({
   };
 
   const paid = paidAmount(invoice.id, payments);
-  const { total } = calcTotals(invoice.items);
-  const outstanding = round2(Math.max(0, total - paid));
+  const { displayTotal } = invoiceTotals(invoice.items, invoice.roundTotals);
+  const outstanding = round2(Math.max(0, displayTotal - paid));
   const lastPay = [...payments]
     .filter((p) => p.invoiceId === invoice.id)
     .sort((a, b) => b.date.localeCompare(a.date))[0];
@@ -160,20 +173,22 @@ export function InvoiceDocumentPreview({
   const metaRows: Array<[string, string]> = [['Issue Date', formatDateUk(invoice.issueDate)]];
   if (kind !== 'receipt') metaRows.push(['Due Date', formatDateUk(invoice.dueDate)]);
   if (kind === 'receipt') {
-    metaRows.push(['Paid', formatGbp(paid)]);
+    metaRows.push(['Paid', formatMoney(paid, invoice.currency)]);
     metaRows.push(['Payment date', formatDateUk(lastPay?.date || invoice.issueDate)]);
     if (lastPay?.method) metaRows.push(['Method', lastPay.method]);
   } else {
     metaRows.push(['Status', invoice.status.toUpperCase()]);
-    metaRows.push(['Currency', 'GBP (£)']);
-    if (kind === 'reminder') metaRows.push(['Amount due', formatGbp(outstanding)]);
+    metaRows.push(['Currency', invoice.currency]);
+    if (kind === 'reminder') metaRows.push(['Amount due', formatMoney(outstanding, invoice.currency)]);
   }
 
   const extras =
     kind === 'receipt' || kind === 'reminder'
       ? [
-          { label: 'Paid', value: formatGbp(paid) },
-          ...(kind === 'reminder' ? [{ label: 'Outstanding', value: formatGbp(outstanding) }] : []),
+          { label: 'Paid', value: formatMoney(paid, invoice.currency) },
+          ...(kind === 'reminder'
+            ? [{ label: 'Outstanding', value: formatMoney(outstanding, invoice.currency) }]
+            : []),
         ]
       : [];
 
@@ -188,7 +203,7 @@ export function InvoiceDocumentPreview({
   } else if (kind === 'receipt') {
     notes = [
       paid > 0
-        ? `We acknowledge receipt of ${formatGbp(paid)} against ${invoice.number}.`
+        ? `We acknowledge receipt of ${formatMoney(paid, invoice.currency)} against ${invoice.number}.`
         : 'Receipt generated — no payments recorded yet.',
       notes,
     ]
@@ -197,7 +212,7 @@ export function InvoiceDocumentPreview({
   } else if (kind === 'reminder') {
     notes = [
       outstanding > 0
-        ? `Please settle the outstanding balance of ${formatGbp(outstanding)} at your earliest convenience.`
+        ? `Please settle the outstanding balance of ${formatMoney(outstanding, invoice.currency)} at your earliest convenience.`
         : 'This invoice appears fully paid — thank you.',
       notes,
     ]
@@ -257,7 +272,13 @@ export function InvoiceDocumentPreview({
       </div>
 
       <ItemsTable items={invoice.items} accent={accent} />
-      <TotalsBlock items={invoice.items} accent={accent} extras={extras} />
+      <TotalsBlock
+        items={invoice.items}
+        accent={accent}
+        currency={invoice.currency}
+        roundTotals={invoice.roundTotals}
+        extras={extras}
+      />
 
       <div className="dp-footer-grid">
         {notes && (
@@ -478,7 +499,7 @@ export function OfferDocumentPreview({
       </div>
 
       <ItemsTable items={offer.items} accent={accent} />
-      <TotalsBlock items={offer.items} accent={accent} />
+      <TotalsBlock items={offer.items} accent={accent} currency={offer.currency} />
 
       <div className="dp-footer-grid">
         {(offer.notes || offer.terms) && (

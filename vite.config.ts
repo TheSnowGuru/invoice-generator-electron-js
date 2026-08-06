@@ -4,6 +4,9 @@ import electron from 'vite-plugin-electron/simple';
 import path from 'path';
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_PWA': JSON.stringify('false'),
+  },
   plugins: [
     react(),
     electron({

@@ -1,3 +1,17 @@
+export type CurrencyCode = 'GBP' | 'EUR' | 'USD' | 'ILS' | 'CHF' | 'AUD' | 'CAD' | 'JPY';
+
+export const CURRENCIES: { code: CurrencyCode; label: string }[] = [
+  { code: 'GBP', label: 'GBP — British pound' },
+  { code: 'EUR', label: 'EUR — Euro' },
+  { code: 'USD', label: 'USD — US dollar' },
+  { code: 'ILS', label: 'ILS — Israeli shekel' },
+  { code: 'CHF', label: 'CHF — Swiss franc' },
+  { code: 'AUD', label: 'AUD — Australian dollar' },
+  { code: 'CAD', label: 'CAD — Canadian dollar' },
+  { code: 'JPY', label: 'JPY — Japanese yen' },
+];
+
+export type VatMode = 'with' | 'without';
 export type InvoiceStatus = 'draft' | 'sent' | 'partial' | 'paid' | 'overdue';
 export type OfferStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
 
@@ -38,6 +52,7 @@ export interface CompanySettings {
   nextOfferNumber: number;
   defaultNotes: string;
   defaultVatRate: number;
+  defaultCurrency: CurrencyCode;
   pdfOutputDir: string;
 }
 
@@ -65,7 +80,9 @@ export interface Invoice {
   status: InvoiceStatus;
   issueDate: string;
   dueDate: string;
-  currency: 'GBP';
+  currency: CurrencyCode;
+  roundTotals?: boolean;
+  vatMode?: VatMode;
   items: LineItem[];
   notes: string;
   accentColor?: string;
@@ -80,7 +97,7 @@ export interface Offer {
   status: OfferStatus;
   issueDate: string;
   validUntil: string;
-  currency: 'GBP';
+  currency: CurrencyCode;
   items: LineItem[];
   notes: string;
   terms: string;
@@ -119,6 +136,10 @@ export const ACCENT_PRESETS = [
   '#e2e8f0',
 ];
 
+export function round2(n: number): number {
+  return Math.round((n + Number.EPSILON) * 100) / 100;
+}
+
 export function calcLineNet(item: LineItem): number {
   return round2(item.quantity * item.unitPrice);
 }
@@ -134,12 +155,34 @@ export function calcTotals(items: LineItem[]) {
   return { subtotal, vat, total };
 }
 
-export function round2(n: number): number {
-  return Math.round((n + Number.EPSILON) * 100) / 100;
+/** Totals with optional rounding of the final amount to whole currency units. */
+export function invoiceTotals(items: LineItem[], roundTotals = false) {
+  const { subtotal, vat, total } = calcTotals(items);
+  if (!roundTotals) {
+    return { subtotal, vat, total, displayTotal: total, roundingAdjustment: 0 };
+  }
+  const displayTotal = Math.round(total);
+  return {
+    subtotal,
+    vat,
+    total,
+    displayTotal,
+    roundingAdjustment: round2(displayTotal - total),
+  };
+}
+
+export function formatMoney(n: number, currency: CurrencyCode = 'GBP'): string {
+  const digits = currency === 'JPY' ? 0 : 2;
+  return new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(n);
 }
 
 export function formatGbp(n: number): string {
-  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(n);
+  return formatMoney(n, 'GBP');
 }
 
 export function formatDateUk(iso: string): string {

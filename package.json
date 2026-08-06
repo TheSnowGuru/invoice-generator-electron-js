@@ -16,7 +16,9 @@
     "build:capacitor": "vite build --config vite.capacitor.config.ts",
     "cap:sync": "npm run build:capacitor && npx cap sync",
     "cap:sync:ios": "npm run build:capacitor && npx cap sync ios",
-    "cap:open:ios": "npx cap open ios"
+    "cap:open:ios": "npx cap open ios",
+    "build:pwa": "vite build --config vite.pwa.config.ts",
+    "preview:pwa": "vite preview --config vite.pwa.config.ts --host"
   },
   "dependencies": {
     "@capacitor/app": "^7.0.0",
@@ -44,7 +46,8 @@
     "typescript": "^5.7.2",
     "vite": "^5.4.11",
     "vite-plugin-electron": "^0.28.8",
-    "vite-plugin-electron-renderer": "^0.14.6"
+    "vite-plugin-electron-renderer": "^0.14.6",
+    "vite-plugin-pwa": "^0.21.1"
   },
   "build": {
     "appId": "com.myfinance.app",
@@ -59,7 +62,10 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["arm64", "x64"]
+          "arch": [
+            "arm64",
+            "x64"
+          ]
         }
       ],
       "identity": null,
@@ -71,7 +77,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
@@ -82,8 +90,16 @@
     "dmg": {
       "title": "MyFinance-${arch}",
       "contents": [
-        { "x": 130, "y": 220 },
-        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
       ]
     },
     "files": [

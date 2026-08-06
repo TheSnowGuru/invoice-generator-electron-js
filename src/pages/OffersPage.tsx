@@ -85,7 +85,7 @@ export default function OffersPage() {
       status: 'draft',
       issueDate: todayIso(),
       dueDate: addDaysIso(30),
-      currency: 'GBP',
+      currency: company.defaultCurrency ?? 'GBP',
       items: offer.items.map((i) => ({ ...i, id: newId(), vatRate })),
       notes: company.defaultNotes,
       createdAt: now,

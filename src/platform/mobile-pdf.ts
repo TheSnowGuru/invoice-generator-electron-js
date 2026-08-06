@@ -1,6 +1,6 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import type { Client, CompanySettings, Invoice, Offer } from '../types';
-import { calcTotals, formatDateUk, formatGbp } from '../types';
+import { calcTotals, formatDateUk, formatMoney, invoiceTotals } from '../types';
 
 type InvoiceDocKind = 'invoice' | 'proforma' | 'receipt' | 'reminder';
 
@@ -78,24 +78,25 @@ export async function buildInvoicePdf(
   page.drawLine({ start: { x: margin, y }, end: { x: 545, y }, thickness: 1, color: rgb(0.85, 0.85, 0.85) });
   y -= 16;
 
+  const cur = invoice.currency;
   for (const item of invoice.items) {
     const line = item.description || '—';
-    const total = item.quantity * item.unitPrice * (1 + item.vatRate);
+    const lineTotal = item.quantity * item.unitPrice * (1 + item.vatRate);
     page.drawText(line.slice(0, 48), { x: margin, y, size: 9, font });
     page.drawText(String(item.quantity), { x: 325, y, size: 9, font });
-    page.drawText(formatGbp(item.unitPrice), { x: 370, y, size: 9, font });
-    page.drawText(formatGbp(total), { x: 470, y, size: 9, font });
+    page.drawText(formatMoney(item.unitPrice, cur), { x: 370, y, size: 9, font });
+    page.drawText(formatMoney(lineTotal, cur), { x: 470, y, size: 9, font });
     y -= 14;
     if (y < 120) break;
   }
 
-  const { subtotal, vat, total } = calcTotals(invoice.items);
+  const { subtotal, vat, displayTotal } = invoiceTotals(invoice.items, invoice.roundTotals);
   y -= 10;
-  page.drawText(`Subtotal: ${formatGbp(subtotal)}`, { x: 400, y, size: 10, font });
+  page.drawText(`Subtotal: ${formatMoney(subtotal, cur)}`, { x: 400, y, size: 10, font });
   y -= 14;
-  page.drawText(`VAT: ${formatGbp(vat)}`, { x: 400, y, size: 10, font });
+  page.drawText(`VAT: ${formatMoney(vat, cur)}`, { x: 400, y, size: 10, font });
   y -= 16;
-  page.drawText(`Total: ${formatGbp(total)}`, { x: 400, y, size: 12, font: bold });
+  page.drawText(`Total: ${formatMoney(displayTotal, cur)}`, { x: 400, y, size: 12, font: bold });
 
   if (kind !== 'receipt' && company.bankAccountNumber) {
     y -= 40;
@@ -148,9 +149,10 @@ export async function buildOfferPdf(
   page.drawText(`Valid until ${formatDateUk(offer.validUntil)}`, { x: 50, y, size: 9, font });
   y -= 30;
 
+  const cur = offer.currency;
   for (const item of offer.items) {
-    const total = item.quantity * item.unitPrice * (1 + item.vatRate);
-    page.drawText(`${item.description || '—'} — ${formatGbp(total)}`, {
+    const lineTotal = item.quantity * item.unitPrice * (1 + item.vatRate);
+    page.drawText(`${item.description || '—'} — ${formatMoney(lineTotal, cur)}`, {
       x: 50,
       y,
       size: 10,
@@ -161,7 +163,7 @@ export async function buildOfferPdf(
 
   const { total } = calcTotals(offer.items);
   y -= 10;
-  page.drawText(`Total: ${formatGbp(total)}`, { x: 400, y, size: 12, font: bold });
+  page.drawText(`Total: ${formatMoney(total, cur)}`, { x: 400, y, size: 12, font: bold });
 
   if (offer.terms) {
     page.drawText(offer.terms, { x: 50, y: 100, size: 8, font, maxWidth: 500 });

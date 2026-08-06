@@ -1,4 +1,22 @@
+/// <reference types="vite/client" />
+/// <reference types="vite-plugin-pwa/client" />
 export {};
+
+interface ImportMetaEnv {
+  readonly VITE_PWA?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
+declare module 'virtual:pwa-register' {
+  export function registerSW(options?: {
+    immediate?: boolean;
+    onNeedRefresh?: () => void;
+    onOfflineReady?: () => void;
+  }): (reloadPage?: boolean) => Promise<void>;
+}
 
 declare global {
   interface Window {

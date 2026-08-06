@@ -12,13 +12,16 @@ import {
 import type { Client, Invoice, Offer } from '../types';
 import {
   ACCENT_PRESETS,
+  CURRENCIES,
   applyVatRateToItems,
   calcTotals,
   formatDateUk,
-  formatGbp,
+  formatMoney,
+  invoiceTotals,
   isSameCountry,
   resolveVatRate,
 } from '../types';
+import type { CurrencyCode, VatMode } from '../types';
 
 export type StudioSession =
   | { kind: 'invoice'; invoice: Invoice; docKind: InvoiceDocKind }
@@ -84,7 +87,11 @@ export default function DocumentStudio({ session, onClose }: Props) {
     return clients.find((c) => c.id === id);
   }, [clients, invoiceDraft?.clientId, offerDraft?.clientId]);
 
-  const vatRate = resolveVatRate(company.country, client?.country, company.defaultVatRate);
+  const vatMode: VatMode = invoiceDraft?.vatMode ?? 'with';
+  const vatRate =
+    vatMode === 'without'
+      ? 0
+      : resolveVatRate(company.country, client?.country, company.defaultVatRate);
   const vatHint =
     client && !isSameCountry(company.country, client.country)
       ? `Client is in ${client.country || 'another country'} (company: ${company.country || '—'}). VAT defaults to 0%.`
@@ -93,10 +100,31 @@ export default function DocumentStudio({ session, onClose }: Props) {
   const selectInvoiceClient = (clientId: string) => {
     if (!invoiceDraft) return;
     const next = clients.find((c) => c.id === clientId);
-    const rate = resolveVatRate(company.country, next?.country, company.defaultVatRate);
+    const mode = invoiceDraft.vatMode ?? 'with';
+    const rate =
+      mode === 'without'
+        ? 0
+        : resolveVatRate(company.country, next?.country, company.defaultVatRate);
     setInvoiceDraft({
       ...invoiceDraft,
       clientId,
+      items: applyVatRateToItems(invoiceDraft.items, rate),
+    });
+  };
+
+  const setInvoiceVatMode = (mode: VatMode) => {
+    if (!invoiceDraft) return;
+    const rate =
+      mode === 'without'
+        ? 0
+        : resolveVatRate(
+            company.country,
+            clients.find((c) => c.id === invoiceDraft.clientId)?.country,
+            company.defaultVatRate
+          );
+    setInvoiceDraft({
+      ...invoiceDraft,
+      vatMode: mode,
       items: applyVatRateToItems(invoiceDraft.items, rate),
     });
   };
@@ -123,7 +151,12 @@ export default function DocumentStudio({ session, onClose }: Props) {
   const shareMessage = useMemo(() => {
     const draft = session.kind === 'invoice' ? invoiceDraft : offerDraft;
     const number = draft?.number ?? '';
-    const total = formatGbp(calcTotals(draft?.items ?? []).total);
+    const currency = (draft?.currency ?? company.defaultCurrency ?? 'GBP') as CurrencyCode;
+    const amount =
+      session.kind === 'invoice'
+        ? invoiceTotals(invoiceDraft?.items ?? [], invoiceDraft?.roundTotals).displayTotal
+        : calcTotals(draft?.items ?? []).total;
+    const total = formatMoney(amount, currency);
     const companyName = company.name || 'MyFinance';
     const greeting = `Hi${client ? ` ${client.contactName || client.name}` : ''},`;
 
@@ -382,6 +415,59 @@ export default function DocumentStudio({ session, onClose }: Props) {
                     />
                   </div>
                 </div>
+                <div className="field full">
+                  <label>Currency</label>
+                  <select
+                    value={invoiceDraft.currency}
+                    onChange={(e) =>
+                      setInvoiceDraft({
+                        ...invoiceDraft,
+                        currency: e.target.value as CurrencyCode,
+                      })
+                    }
+                  >
+                    {CURRENCIES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field full">
+                  <label>VAT</label>
+                  <div className="radio-row">
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="vatMode"
+                        checked={vatMode === 'with'}
+                        onChange={() => setInvoiceVatMode('with')}
+                      />
+                      With VAT
+                    </label>
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="vatMode"
+                        checked={vatMode === 'without'}
+                        onChange={() => setInvoiceVatMode('without')}
+                      />
+                      Without VAT
+                    </label>
+                  </div>
+                </div>
+                <div className="field full">
+                  <label className="checkbox-option">
+                    <input
+                      type="checkbox"
+                      checked={!!invoiceDraft.roundTotals}
+                      onChange={(e) =>
+                        setInvoiceDraft({ ...invoiceDraft, roundTotals: e.target.checked })
+                      }
+                    />
+                    Round totals to whole currency units
+                  </label>
+                </div>
                 <div className="field">
                   <label>Accent colour</label>
                   <div className="color-row">
@@ -401,7 +487,9 @@ export default function DocumentStudio({ session, onClose }: Props) {
                   <LineItemsEditor
                     items={invoiceDraft.items}
                     defaultVatRate={vatRate}
-                    vatHint={vatHint}
+                    currency={invoiceDraft.currency}
+                    vatDisabled={vatMode === 'without'}
+                    vatHint={vatMode === 'without' ? 'Prices exclude VAT.' : vatHint}
                     onChange={(items) => setInvoiceDraft({ ...invoiceDraft, items })}
                   />
                 </div>

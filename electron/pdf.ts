@@ -1,7 +1,8 @@
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import type { Client, CompanySettings, Invoice, Offer, LineItem, Payment } from './types';
-import { calcTotals, formatGbp, formatDateUk, calcLineNet, calcLineVat, round2 } from './types';
+import { calcTotals, formatDateUk, formatGbp, formatMoney, invoiceTotals, calcLineNet, calcLineVat, round2 } from './types';
+import type { CurrencyCode } from './types';
 
 export type InvoiceDocKind = 'invoice' | 'proforma' | 'receipt' | 'reminder';
 
@@ -229,19 +230,24 @@ function drawTotals(
   y: number,
   items: LineItem[],
   accent: string,
+  currency: CurrencyCode,
+  roundTotals = false,
   extraRows: Array<[string, string, boolean]> = []
 ): number {
   const pageWidth = doc.page.width;
   const margin = 50;
-  const { subtotal, vat, total } = calcTotals(items);
+  const { subtotal, vat, displayTotal, roundingAdjustment } = invoiceTotals(items, roundTotals);
   const boxX = pageWidth - margin - 200;
 
   const rows: Array<[string, string, boolean]> = [
-    ['Subtotal', formatGbp(subtotal), false],
-    ['VAT', formatGbp(vat), false],
+    ['Subtotal', formatMoney(subtotal, currency), false],
+    ['VAT', formatMoney(vat, currency), false],
     ...extraRows,
-    ['Total (GBP)', formatGbp(total), true],
   ];
+  if (roundTotals && roundingAdjustment !== 0) {
+    rows.push(['Rounding', formatMoney(roundingAdjustment, currency), false]);
+  }
+  rows.push([`Total (${currency})`, formatMoney(displayTotal, currency), true]);
 
   for (const [label, value, bold] of rows) {
     if (bold) {
@@ -409,7 +415,7 @@ export function generateInvoicePdf({
         if (kind === 'reminder') extra.push(['Outstanding', formatGbp(outstanding), false]);
       }
 
-      y = drawTotals(doc, y + 4, invoice.items, accent, extra);
+      y = drawTotals(doc, y + 4, invoice.items, accent, invoice.currency, invoice.roundTotals, extra);
 
       let notes = invoice.notes;
       if (kind === 'proforma') {
@@ -492,7 +498,7 @@ export function generateOfferPdf(args: OfferPdfArgs): Promise<string> {
       );
 
       y = drawItemsTable(doc, y + 8, offer.items, accent);
-      y = drawTotals(doc, y + 4, offer.items, accent);
+      y = drawTotals(doc, y + 4, offer.items, accent, offer.currency, false);
 
       const notes = [offer.notes, offer.terms ? `\nTerms:\n${offer.terms}` : '']
         .filter(Boolean)
