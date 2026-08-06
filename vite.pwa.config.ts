@@ -3,8 +3,11 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
+const base = process.env.VITE_PWA_BASE || './';
+
 /** PWA build for iPad / mobile browsers (install to home screen). */
 export default defineConfig({
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -38,9 +41,11 @@ export default defineConfig({
       },
     }),
   ],
-  base: './',
   define: {
     'import.meta.env.VITE_PWA': JSON.stringify('true'),
+    'import.meta.env.VITE_PWA_PASSWORD_HASH': JSON.stringify(
+      process.env.VITE_PWA_PASSWORD_HASH || ''
+    ),
   },
   resolve: {
     alias: {

@@ -82,6 +82,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Derive PWA password hash
+        run: |
+          if [ -n "${{ secrets.PWA_PASSWORD }}" ]; then
+            HASH=$(printf '%s' "${{ secrets.PWA_PASSWORD }}" | sha256sum | awk '{print $1}')
+            echo "VITE_PWA_PASSWORD_HASH=$HASH" >> "$GITHUB_ENV"
+          fi
+
       - name: Build PWA (iPad / mobile browser)
         run: npm run build:pwa
 

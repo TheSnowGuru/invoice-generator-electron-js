@@ -4,6 +4,7 @@ export {};
 
 interface ImportMetaEnv {
   readonly VITE_PWA?: string;
+  readonly VITE_PWA_PASSWORD_HASH?: string;
 }
 
 interface ImportMeta {

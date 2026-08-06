@@ -1466,3 +1466,47 @@ table.data tr:hover td {
   }
 }
 
+.pwa-auth-screen {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--bg);
+}
+
+.pwa-auth-card {
+  width: min(100%, 380px);
+  padding: 28px 24px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  text-align: center;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12);
+}
+
+.pwa-auth-card h1 {
+  margin: 0 0 8px;
+  font-size: 1.35rem;
+}
+
+.pwa-auth-lead {
+  margin: 0 0 20px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.pwa-auth-form {
+  text-align: left;
+}
+
+.pwa-auth-form .btn {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.pwa-auth-error {
+  margin: 0 0 8px;
+  color: #f87171;
+  font-size: 0.9rem;
+}
+
