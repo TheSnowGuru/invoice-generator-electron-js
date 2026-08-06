@@ -83,9 +83,19 @@
       }
       .error {
         color: #f87171;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         margin: 10px 0 0;
         min-height: 1.2em;
+        text-align: left;
+        line-height: 1.45;
+        white-space: pre-wrap;
+      }
+      .status {
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-top: 12px;
+        text-align: left;
+        line-height: 1.4;
       }
       .install {
         padding: 16px 18px;
@@ -120,6 +130,7 @@
           <label for="password">Password</label>
           <input id="password" name="password" type="password" autocomplete="current-password" required autofocus />
           <p class="error" id="error" aria-live="polite"></p>
+          <p class="status" id="status" aria-live="polite"></p>
           <button type="submit" id="submit">Sign in</button>
         </form>
       </div>
@@ -138,7 +149,58 @@
       }
       const form = document.getElementById('login');
       const errorEl = document.getElementById('error');
+      const statusEl = document.getElementById('status');
       const submit = document.getElementById('submit');
+
+      async function loadAuthStatus() {
+        try {
+          const res = await fetch('/api/auth/status');
+          const text = await res.text();
+          let data = {};
+          try {
+            data = JSON.parse(text);
+          } catch {
+            statusEl.textContent =
+              'Server status: invalid response (HTTP ' +
+              res.status +
+              '). Functions may be crashing — redeploy after fixing env vars.';
+            return;
+          }
+          if (data.ok) {
+            statusEl.textContent = 'Server ready: ' + (data.hint || 'You can sign in.');
+          } else {
+            const bad = data.checks
+              ? Object.entries(data.checks)
+                  .filter(([, v]) => !v)
+                  .map(([k]) => k)
+                  .join(', ')
+              : '';
+            statusEl.textContent =
+              'Server not ready: ' +
+              (data.hint || 'Check Vercel env vars') +
+              (bad ? ' (' + bad + ')' : '');
+          }
+        } catch {
+          statusEl.textContent = 'Could not reach /api/auth/status.';
+        }
+      }
+      loadAuthStatus();
+
+      function formatLoginError(data, status) {
+        const parts = [];
+        if (data.error) parts.push(data.error);
+        if (data.code) parts.push('[' + data.code + ']');
+        if (data.hint) parts.push(data.hint);
+        if (data.checks) {
+          const bad = Object.entries(data.checks)
+            .filter(([, v]) => !v)
+            .map(([k]) => k);
+          if (bad.length) parts.push('Check: ' + bad.join(', '));
+        }
+        if (status >= 500) parts.push('HTTP ' + status);
+        return parts.join('\n') || 'Sign in failed (HTTP ' + status + ')';
+      }
+
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         errorEl.textContent = '';
@@ -155,8 +217,20 @@
             window.location.href = '/';
             return;
           }
-          const data = await res.json().catch(() => ({}));
-          errorEl.textContent = data.error || 'Sign in failed.';
+          const text = await res.text();
+          let data = {};
+          try {
+            data = JSON.parse(text);
+          } catch {
+            errorEl.textContent =
+              (text.includes('FUNCTION_INVOCATION_FAILED')
+                ? 'Server function crashed. Set SESSION_SECRET (16+ chars) and ACCESS_PASSWORD in Vercel, redeploy.'
+                : text.slice(0, 300)) +
+              '\nHTTP ' +
+              res.status;
+            return;
+          }
+          errorEl.textContent = formatLoginError(data, res.status);
         } catch {
           errorEl.textContent = 'Network error. Try again.';
         } finally {

@@ -1535,7 +1535,10 @@ table.data tr:hover td {
 .pwa-auth-error {
   margin: 0 0 8px;
   color: #f87171;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  text-align: left;
 }
 
 /* Light theme: stronger dashboard & form contrast */

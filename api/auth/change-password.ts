@@ -1,9 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import {
-  getPasswordHashRecord,
   hashPassword,
   updatePasswordHash,
-  verifyPassword,
+  verifyLoginPassword,
 } from '../_lib/password';
 import { COOKIE_NAME, verifySessionToken } from '../_lib/session';
 import { getCookie, readJsonBody } from '../_lib/http';
@@ -31,14 +30,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'New password must be at least 6 characters' });
   }
 
-  const stored = await getPasswordHashRecord();
-  if (!stored) {
-    return res.status(503).json({ error: 'Password storage is not configured' });
-  }
-
-  const ok = await verifyPassword(currentPassword, stored);
-  if (!ok) {
-    return res.status(401).json({ error: 'Current password is incorrect' });
+  const verified = await verifyLoginPassword(currentPassword);
+  if (!verified.ok) {
+    return res.status(401).json({ error: 'Current password is incorrect', code: 'WRONG_PASSWORD' });
   }
 
   const nextHash = await hashPassword(newPassword);
