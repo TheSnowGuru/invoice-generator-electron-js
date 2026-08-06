@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build app (Vite)
+      - name: Build app (Vite + Electron)
         run: npm run build
 
       - name: Package macOS
@@ -36,8 +36,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: macos
-          path: |
-            release/*.dmg
+          path: release/*.dmg
           if-no-files-found: error
 
   build-win:
@@ -55,7 +54,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build app (Vite)
+      - name: Build app (Vite + Electron)
         run: npm run build
 
       - name: Package Windows
@@ -65,12 +64,88 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows
-          path: |
-            release/*.exe
+          path: release/*.exe
+          if-no-files-found: error
+
+  build-pwa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build PWA (iPad / mobile browser)
+        run: npm run build:pwa
+
+      - name: Zip PWA for self-hosting
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          cd dist
+          zip -r "../MyFinance-${VERSION}-pwa-web.zip" .
+          cd ..
+          ls -la "MyFinance-${VERSION}-pwa-web.zip"
+
+      - name: Upload PWA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwa
+          path: MyFinance-*-pwa-web.zip
+          if-no-files-found: error
+
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync Capacitor iOS
+        run: npm run cap:sync:ios
+
+      - name: Build iOS app (unsigned archive for sideload tooling)
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          ARCHIVE="$RUNNER_TEMP/MyFinance.xcarchive"
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$ARCHIVE" \
+            archive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM=""
+          cd "$ARCHIVE/Products/Applications"
+          zip -r "$GITHUB_WORKSPACE/MyFinance-${VERSION}-ios-unsigned.zip" App.app
+          ls -la "$GITHUB_WORKSPACE/MyFinance-${VERSION}-ios-unsigned.zip"
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios
+          path: MyFinance-*-ios-unsigned.zip
           if-no-files-found: error
 
   release:
-    needs: [build-mac, build-win]
+    needs: [build-mac, build-win, build-pwa, build-ios]
     runs-on: ubuntu-latest
     steps:
       - name: Download macOS artifacts
@@ -85,6 +160,18 @@ jobs:
           name: windows
           path: dist-release/windows
 
+      - name: Download PWA artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: pwa
+          path: dist-release/pwa
+
+      - name: Download iOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ios
+          path: dist-release/ios
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -92,3 +179,5 @@ jobs:
           files: |
             dist-release/macos/*
             dist-release/windows/*
+            dist-release/pwa/*
+            dist-release/ios/*
